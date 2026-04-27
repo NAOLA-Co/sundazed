@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10131b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Party Pay QR">
+  <title>Party Pay QR</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Personal House-Party Reimbursement</p>
+        <h1>Party Pay QR</h1>
+      </div>
+      <div class="topbar-actions">
+        <button id="hostEditShortcut" class="ghost-button hidden" type="button">Host Edit</button>
+        <button id="settingsToggle" class="icon-button" type="button" aria-label="Open settings">Settings</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="messageBanner" class="message hidden" aria-live="polite"></section>
+
+      <section id="hostScreen" class="screen screen-host">
+        <div class="screen-intro">
+          <span class="screen-badge">Host</span>
+          <h2>Build the reimbursement</h2>
+          <p>Add drinks, food, or custom items, then hand the phone to your guest.</p>
+        </div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h3>Quick Add</h3>
+            <p>Tap an item to add it to the cart.</p>
+          </div>
+          <div id="presetItems" class="preset-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h3>Custom Item</h3>
+            <p>Use for anything not on the quick list.</p>
+          </div>
+          <form id="customItemForm" class="custom-item-form" novalidate>
+            <label>
+              <span>Name</span>
+              <input id="customItemName" name="customItemName" type="text" maxlength="30" placeholder="Late-night tacos">
+            </label>
+            <label>
+              <span>Price</span>
+              <input id="customItemPrice" name="customItemPrice" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="6.50">
+            </label>
+            <button class="primary-button" type="submit">Add Custom Item</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h3>Venmo Note Icons</h3>
+            <p>Only these emojis will be included in the note.</p>
+          </div>
+          <div id="noteIconPicker" class="emoji-picker"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h3>Cart</h3>
+            <p>Adjust quantities before handing over.</p>
+          </div>
+          <div id="hostCartEmpty" class="empty-state">
+            <p>No items yet. Add a few drinks or snacks to start.</p>
+          </div>
+          <div id="hostCartList" class="cart-list"></div>
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <strong id="hostSubtotal">$0.00</strong>
+          </div>
+          <button id="handToGuestButton" class="primary-button" type="button">Hand to Guest</button>
+        </section>
+
+        <section id="settingsPanel" class="panel settings-panel hidden">
+          <div class="panel-heading">
+            <h3>Settings</h3>
+            <p>Saved to this device only.</p>
+          </div>
+
+          <form id="settingsForm" class="settings-form" novalidate>
+            <label>
+              <span>Venmo Username</span>
+              <input id="venmoUsernameInput" name="venmoUsername" type="text" maxlength="40" placeholder="captkamikaze">
+            </label>
+
+            <fieldset>
+              <legend>Default Note Icons</legend>
+              <div id="settingsNotePicker" class="emoji-picker"></div>
+            </fieldset>
+
+            <div class="settings-actions">
+              <button class="primary-button" type="submit">Save Settings</button>
+              <button id="resetDefaultsButton" class="ghost-button" type="button">Reset Defaults</button>
+            </div>
+          </form>
+
+          <div class="preset-editor">
+            <div class="panel-heading">
+              <h3>Default Item List</h3>
+              <p>These buttons appear in Quick Add.</p>
+            </div>
+            <div id="settingsPresetList" class="settings-preset-list"></div>
+            <form id="settingsPresetForm" class="settings-preset-form" novalidate>
+              <label>
+                <span>Item Name</span>
+                <input id="settingsPresetName" type="text" maxlength="30" placeholder="Soda">
+              </label>
+              <label>
+                <span>Price</span>
+                <input id="settingsPresetPrice" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="2.00">
+              </label>
+              <button class="secondary-button" type="submit">Add Preset Item</button>
+            </form>
+          </div>
+        </section>
+      </section>
+
+      <section id="guestScreen" class="screen screen-guest hidden">
+        <div class="screen-intro">
+          <span class="screen-badge guest-badge">Guest</span>
+          <h2>Confirm your reimbursement</h2>
+          <p>Review the items, choose a tip if you want, and continue to Venmo.</p>
+        </div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h3>Your Items</h3>
+            <p>Item list and note icons are locked on this screen.</p>
+          </div>
+          <div id="guestCartList" class="cart-list guest-cart-list"></div>
+          <div class="summary-stack">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong id="guestSubtotal">$0.00</strong>
+            </div>
+            <div class="summary-row">
+              <span>Venmo Note</span>
+              <strong id="guestNotePreview">🍺🍸</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h3>Tip</h3>
+            <p>Choose one option below.</p>
+          </div>
+          <div id="tipOptions" class="tip-grid"></div>
+          <label id="customTipLabel" class="custom-tip hidden">
+            <span>Custom Tip Amount</span>
+            <input id="customTipInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+          </label>
+          <div class="summary-stack total-stack">
+            <div class="summary-row">
+              <span>Tip</span>
+              <strong id="guestTip">$0.00</strong>
+            </div>
+            <div class="summary-row total-row">
+              <span>Final Total</span>
+              <strong id="guestTotal">$0.00</strong>
+            </div>
+          </div>
+          <button id="confirmTotalButton" class="primary-button" type="button">Confirm Total</button>
+        </section>
+      </section>
+
+      <section id="qrScreen" class="screen screen-qr hidden">
+        <div class="screen-intro">
+          <span class="screen-badge qr-badge">Venmo</span>
+          <h2>Ready to send</h2>
+          <p>Scan the code or open Venmo directly.</p>
+        </div>
+
+        <section class="panel qr-panel">
+          <div class="summary-stack total-stack">
+            <div class="summary-row total-row">
+              <span>Final Total</span>
+              <strong id="qrTotal">$0.00</strong>
+            </div>
+            <div class="summary-row">
+              <span>Note Icons</span>
+              <strong id="qrNotePreview">🍺🍸</strong>
+            </div>
+          </div>
+          <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
+          <p class="qr-help">Scan this QR code and confirm payment in Venmo.</p>
+          <p class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
+          <label class="url-field">
+            <span>Venmo URL</span>
+            <textarea id="venmoUrlOutput" rows="3" readonly></textarea>
+          </label>
+          <div class="action-stack">
+            <a id="openVenmoButton" class="primary-button" href="#" target="_blank" rel="noopener noreferrer">Open Venmo</a>
+            <button id="backToTipButton" class="secondary-button" type="button">Back to Tip</button>
+            <button id="newOrderButton" class="ghost-button" type="button">New Order</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" referrerpolicy="no-referrer"></script>
+  <script src="app.js"></script>
+</body>
+</html>
