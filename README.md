@@ -9,6 +9,7 @@ Party Pay QR is a zero-backend static web app for personal house-party reimburse
 - `app.js`
 - `manifest.json`
 - `service-worker.js`
+- `icon-512.png`
 - `icon.svg`
 
 ## Features

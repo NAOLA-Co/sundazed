@@ -6,6 +6,7 @@ const APP_SHELL = [
   "./app.js",
   "./manifest.json",
   "./service-worker.js",
+  "./icon-512.png",
   "./icon.svg"
 ];
 const OPTIONAL_ASSETS = [
