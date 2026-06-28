@@ -7,10 +7,13 @@ const APP_SHELL = [
   "./manifest.json",
   "./service-worker.js",
   "./icon-512.png",
-  "./icon.svg"
+  "./icon.svg",
+  "./sundazed_logo_black.png",
+  "./sundazed_logo_white.png"
 ];
 const OPTIONAL_ASSETS = [
-  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+  "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ];
 
 self.addEventListener("install", (event) => {

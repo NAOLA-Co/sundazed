@@ -1,7 +1,7 @@
 {
-  "name": "Party Pay QR",
-  "short_name": "Party Pay QR",
-  "description": "A static mobile-first PWA for personal house-party reimbursement with Venmo QR codes.",
+  "name": "Sundazed",
+  "short_name": "Sundazed",
+  "description": "A static mobile-first PWA for party reimbursement with Venmo QR codes.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

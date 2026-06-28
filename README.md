@@ -1,6 +1,6 @@
-# Party Pay QR
+# Sundazed
 
-Party Pay QR is a zero-backend static web app for personal house-party reimbursement. The host builds the order, the guest only picks a tip, and the app generates a Venmo QR code and URL that work well on mobile.
+Sundazed is a static web app for personal house-party reimbursement. The host builds the order, the guest picks a tip and note icons, and the app generates a Venmo QR code and URL that work well on mobile and tablet.
 
 ## Files
 
@@ -11,6 +11,9 @@ Party Pay QR is a zero-backend static web app for personal house-party reimburse
 - `service-worker.js`
 - `icon-512.png`
 - `icon.svg`
+- `sundazed_logo_black.png`
+- `sundazed_logo_white.png`
+- `supabase.sql`
 
 ## Features
 
@@ -18,7 +21,8 @@ Party Pay QR is a zero-backend static web app for personal house-party reimburse
 - Mobile-first layout designed for iPhone Safari
 - PWA support with `manifest.json` and `service-worker.js`
 - Host flow, guest flow, and QR confirmation flow
-- Local-only settings saved in `localStorage`
+- Local settings saved in `localStorage`
+- Optional Supabase sync for settings and sales events
 - Venmo note locked to allowed drink emojis only
 - Tip options including no tip, percentages, and custom dollar amount
 - QR generation using `qrcode.js`
@@ -45,16 +49,41 @@ This app loads `qrcode.js` from the Cloudflare CDN:
 
 That keeps the project simple and avoids any build tools or package manager setup. The service worker will cache the script after the first successful load. If you want the app to be fully self-contained with no CDN dependency, download that file and change the script tag in `index.html` plus the cache list in `service-worker.js`.
 
-## Local Settings
+## Supabase Sync
 
-The app stores the following in `localStorage` only:
+The app can optionally sync settings and sales to Supabase using the fields in the Settings tab:
+
+- `Supabase URL`
+- `Supabase Publishable Key`
+- `Workspace Key`
+
+Run the SQL in `supabase.sql` inside the Supabase SQL editor. It creates:
+
+- `app_settings` for saved settings
+- `sales_events` for reimbursement/sales rows with a `sale_date`
+
+Current sync behavior:
+
+- Saving Settings writes the latest settings to `app_settings`
+- Marking a payment as received inserts a row into `sales_events`
+- On load, if Supabase is configured, the app attempts to pull settings from `app_settings`
+
+Security note:
+
+- The included SQL uses permissive public policies so the static app can write without a custom backend.
+- That is acceptable only for a personal/private project.
+- For stricter security, add real auth and tighten the Supabase RLS policies.
+
+## Local Storage
+
+The app also stores the following in browser `localStorage`:
 
 - Venmo username
+- Supabase configuration fields
 - Default preset item list
 - Default pre-selected note icons
 - Current cart
-
-It does not use a backend or database.
+- Sales report history
 
 ## GitHub Pages Deployment
 
@@ -72,3 +101,4 @@ It does not use a backend or database.
 - All asset paths are relative, so the app works on GitHub Pages project URLs.
 - The app uses reimbursement wording and is designed for personal party cost-sharing, not a business point-of-sale flow.
 - Safari install behavior is best when the site is served over HTTPS, which GitHub Pages provides automatically.
+- The app also loads `@supabase/supabase-js` from a CDN when cloud sync is enabled.
