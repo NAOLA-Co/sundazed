@@ -68,6 +68,7 @@ const elements = {
   handToGuestButton: document.getElementById("handToGuestButton"),
   guestCartList: document.getElementById("guestCartList"),
   guestSubtotal: document.getElementById("guestSubtotal"),
+  guestSummarySubtotal: document.getElementById("guestSummarySubtotal"),
   guestNotePreview: document.getElementById("guestNotePreview"),
   guestNotePicker: document.getElementById("guestNotePicker"),
   tipOptions: document.getElementById("tipOptions"),
@@ -221,11 +222,12 @@ function renderHostCart() {
 
   appState.cart.forEach((item) => {
     const row = document.createElement("div");
-    row.className = "cart-item";
+    row.className = "cart-item host-cart-item";
     row.innerHTML = `
       <div class="cart-meta">
         <strong>${escapeHtml(item.name)}</strong>
-        <p>${item.quantity} × ${formatCurrency(item.price)} · ${formatCurrency(item.price * item.quantity)}</p>
+        <p>${item.quantity} × ${formatCurrency(item.price)}</p>
+        <span class="cart-line-total">${formatCurrency(item.price * item.quantity)}</span>
       </div>
       <div class="cart-controls">
         <button class="stepper-button" type="button" aria-label="Decrease ${escapeHtml(item.name)}">-</button>
@@ -437,6 +439,7 @@ function updateSummary() {
 
   elements.hostSubtotal.textContent = formatCurrency(subtotal);
   elements.guestSubtotal.textContent = formatCurrency(subtotal);
+  elements.guestSummarySubtotal.textContent = formatCurrency(subtotal);
   elements.guestTip.textContent = formatCurrency(tip);
   elements.guestTotal.textContent = formatCurrency(total);
   elements.guestNotePreview.textContent = note || "No icons selected";
