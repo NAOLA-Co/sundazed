@@ -1112,14 +1112,14 @@ function renderPaymentQr() {
 
   if (isVenmo) {
     setElementText(elements.qrHelpPrimary, "Use your phone camera to scan this QR code, then confirm payment in Venmo.");
-    setElementText(elements.qrHelpSecondary, "Please confirm the amount inside Venmo before sending.");
+    setElementText(elements.qrHelpSecondary, "");
     setElementText(elements.qrHelpTertiary, "");
     renderQrCode(venmoUrl);
     return;
   }
 
   setElementText(elements.qrHelpPrimary, "Scan this Zelle QR code in your bank app.");
-  setElementText(elements.qrHelpSecondary, "Please enter the total shown here before sending with Zelle.");
+  setElementText(elements.qrHelpSecondary, "");
   setElementText(elements.qrHelpTertiary, "Recipient name will show as CHRISTOPHER LEQUANG in Zelle.");
   elements.qrCode.innerHTML = "";
 }
