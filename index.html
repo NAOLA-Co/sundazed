@@ -23,11 +23,13 @@
       </div>
       <div class="topbar-actions">
         <button id="stepBackButton" class="ghost-button hidden" type="button">Back</button>
+        <button id="markPaidButton" class="icon-button hidden" type="button" aria-label="Mark payment received">✓</button>
+        <button id="newOrderButton" class="icon-button hidden" type="button" aria-label="Start new order">＋</button>
         <button id="settingsToggle" class="icon-button settings-icon-button" type="button" aria-label="Open settings">⚙️</button>
       </div>
     </header>
 
-    <main>
+    <main id="mainContent">
       <section id="messageBanner" class="message hidden" aria-live="polite"></section>
 
       <section id="hostScreen" class="screen screen-host">
@@ -42,11 +44,14 @@
           <section class="panel host-cart-panel">
             <div class="panel-heading">
               <h3>Cart</h3>
+              <button id="clearCartButton" class="ghost-button small-ghost-button" type="button">Clear Cart</button>
             </div>
-            <div id="hostCartEmpty" class="empty-state">
-              <p>No items yet. Add a few drinks or snacks to start.</p>
+            <div class="host-cart-body">
+              <div id="hostCartEmpty" class="empty-state">
+                <p>No items yet. Add a few drinks or snacks to start.</p>
+              </div>
+              <div id="hostCartList" class="cart-list"></div>
             </div>
-            <div id="hostCartList" class="cart-list"></div>
             <div class="host-cart-footer">
               <div class="summary-row host-subtotal-row">
                 <span>Subtotal</span>
@@ -90,7 +95,14 @@
           <section id="reportPanel" class="panel hidden">
             <div class="panel-heading">
               <h3>Sales Report</h3>
-              <p>Host-only local summary of sales marked as received.</p>
+              <p>Live sales pulled from Supabase for the selected date.</p>
+            </div>
+            <div class="report-filter-bar">
+              <label class="report-date-field">
+                <span>Date</span>
+                <input id="reportDateFilter" type="date">
+              </label>
+              <button id="reportTodayButton" class="ghost-button small-ghost-button" type="button">Today</button>
             </div>
             <div class="report-grid">
               <div class="report-card">
@@ -117,10 +129,10 @@
             <div id="reportTopItems" class="report-list"></div>
             <div class="panel-heading compact-heading">
               <h3>Recent Sales</h3>
-              <p>Latest marked-as-received sales on this device.</p>
+              <p>Latest marked-as-received sales for this date.</p>
             </div>
             <div id="reportRecentOrders" class="report-list"></div>
-            <button id="clearReportButton" class="ghost-button" type="button">Clear Sales Report</button>
+            <button id="clearReportButton" class="ghost-button" type="button">Clear This Day</button>
           </section>
 
           <section id="advancedPanel" class="panel hidden">
@@ -170,37 +182,55 @@
           </section>
 
           <section class="checkout-section guest-tip-section">
-            <h4>Tip</h4>
+            <div class="summary-row guest-tip-row">
+              <span>Tip</span>
+              <strong id="guestTip">$0.00</strong>
+            </div>
             <div id="tipOptions" class="tip-grid single-row-tip-grid"></div>
-            <label id="customTipLabel" class="custom-tip hidden">
-              <span>Custom Tip Amount</span>
-              <input id="customTipInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
-            </label>
           </section>
 
-          <div class="summary-stack total-stack guest-total-stack">
-            <div class="checkout-total-card final-total-card">
-              <span>Final Total</span>
-              <strong id="guestTotal">$0.00</strong>
+          <div class="guest-total-actions">
+            <div class="summary-stack total-stack guest-total-stack">
+              <div class="checkout-total-card final-total-card">
+                <span>Final Total</span>
+                <strong id="guestTotal">$0.00</strong>
+              </div>
             </div>
+            <button id="confirmTotalButton" class="primary-button guest-confirm-button" type="button">Confirm Total</button>
           </div>
-          <button id="confirmTotalButton" class="primary-button guest-confirm-button" type="button">Confirm Total</button>
         </section>
+      </section>
+
+      <section id="paymentScreen" class="payment-stage hidden">
+        <div class="payment-stage-inner">
+          <div class="payment-method-grid">
+            <button id="venmoMethodButton" class="payment-method-card" type="button" data-payment-method="venmo">
+              <img class="payment-method-logo" src="venmo_logo.svg" alt="Venmo">
+            </button>
+            <button id="zelleMethodButton" class="payment-method-card" type="button" data-payment-method="zelle">
+              <img class="payment-method-logo" src="zelle_logo.svg" alt="Zelle">
+            </button>
+          </div>
+        </div>
       </section>
 
       <section id="qrScreen" class="screen screen-qr hidden">
         <section class="panel qr-panel">
-          <div class="summary-stack total-stack">
+          <div id="qrSummaryStack" class="summary-stack total-stack">
             <div class="summary-row total-row">
               <span>Final Total</span>
               <strong id="qrTotal">$0.00</strong>
             </div>
             <div class="summary-row">
+              <span>Payment</span>
+              <strong id="qrMethodName">Venmo</strong>
+            </div>
+            <div id="qrNoteSummaryRow" class="summary-row">
               <span>Note</span>
               <strong id="qrNotePreview">🍺🍸</strong>
             </div>
           </div>
-          <section class="checkout-section qr-note-section">
+          <section id="qrNoteSection" class="checkout-section qr-note-section">
             <h4>Note</h4>
             <div id="guestNotePicker" class="emoji-picker"></div>
             <div class="summary-stack">
@@ -210,17 +240,22 @@
               </div>
             </div>
           </section>
+          <img id="venmoQrLogo" class="zelle-qr-logo hidden" src="venmo_logo.svg" alt="Venmo">
           <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
-          <p class="qr-help">Scan this QR code and confirm payment in Venmo.</p>
-          <p class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
-          <label class="url-field">
+          <div id="zelleQrWrap" class="qr-static hidden">
+            <img class="zelle-qr-logo" src="zelle_logo.svg" alt="Zelle">
+            <img class="zelle-qr-code" src="zelle_qr.png" alt="Zelle QR code for Christopher Lequang">
+          </div>
+          <p id="qrHelpPrimary" class="qr-help qr-help-primary">Scan this QR code and confirm payment in Venmo.</p>
+          <p id="qrHelpSecondary" class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
+          <p id="qrHelpTertiary" class="qr-help subtle hidden">Recipient name will show as CHRISTOPHER LEQUANG in Zelle.</p>
+          <div id="zelleAmountDisplay" class="zelle-amount-display hidden">$0.00</div>
+          <label id="venmoUrlField" class="url-field hidden">
             <span>Venmo URL</span>
             <textarea id="venmoUrlOutput" rows="3" readonly></textarea>
           </label>
-          <div class="action-stack">
+          <div class="action-stack hidden">
             <a id="openVenmoButton" class="primary-button" href="#" target="_blank" rel="noopener noreferrer">Open Venmo</a>
-            <button id="markPaidButton" class="secondary-button" type="button">Payment Marked Received</button>
-            <button id="newOrderButton" class="ghost-button" type="button">New Order</button>
           </div>
         </section>
       </section>
@@ -245,6 +280,36 @@
               <button id="closeItemModalButton" class="ghost-button" type="button">Cancel</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <div id="tipModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tipModalTitle">
+        <div class="modal-card tip-modal-card">
+          <div class="panel-heading">
+            <h3 id="tipModalTitle">Custom Tip</h3>
+            <p>Enter the tip amount.</p>
+          </div>
+          <div class="tip-modal-display-wrap">
+            <div id="tipModalDisplay" class="tip-modal-display">$0.00</div>
+          </div>
+          <div id="tipNumpad" class="tip-numpad">
+            <button class="tip-key" type="button" data-tip-key="1">1</button>
+            <button class="tip-key" type="button" data-tip-key="2">2</button>
+            <button class="tip-key" type="button" data-tip-key="3">3</button>
+            <button class="tip-key" type="button" data-tip-key="4">4</button>
+            <button class="tip-key" type="button" data-tip-key="5">5</button>
+            <button class="tip-key" type="button" data-tip-key="6">6</button>
+            <button class="tip-key" type="button" data-tip-key="7">7</button>
+            <button class="tip-key" type="button" data-tip-key="8">8</button>
+            <button class="tip-key" type="button" data-tip-key="9">9</button>
+            <button class="tip-key tip-key-muted" type="button" data-tip-key="clear">Clear</button>
+            <button class="tip-key" type="button" data-tip-key="0">0</button>
+            <button class="tip-key tip-key-muted" type="button" data-tip-key="double-zero">.00</button>
+          </div>
+          <div class="inline-actions">
+            <button id="applyTipButton" class="primary-button" type="button">Apply Tip</button>
+            <button id="closeTipModalButton" class="ghost-button" type="button">Cancel</button>
+          </div>
         </div>
       </div>
     </main>

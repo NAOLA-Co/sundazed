@@ -1,4 +1,4 @@
-const CACHE_NAME = "party-pay-qr-v2";
+const CACHE_NAME = "party-pay-qr-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -9,7 +9,10 @@ const APP_SHELL = [
   "./icon-512.png",
   "./icon.svg",
   "./sundazed_logo_black.png",
-  "./sundazed_logo_white.png"
+  "./sundazed_logo_white.png",
+  "./venmo_logo.svg",
+  "./zelle_logo.svg",
+  "./zelle_qr.png"
 ];
 const OPTIONAL_ASSETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",

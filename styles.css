@@ -26,9 +26,11 @@
 html,
 body {
   margin: 0;
+  height: 100%;
   min-height: 100%;
   background: #090b10;
   color: var(--text);
+  overflow: hidden;
 }
 
 body {
@@ -50,6 +52,11 @@ a {
   max-width: 1280px;
   margin: 0 auto;
   padding: env(safe-area-inset-top) 10px var(--safe-bottom);
+  height: 100vh;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 12vh minmax(0, 88vh);
+  overflow: hidden;
 }
 
 .topbar {
@@ -58,6 +65,19 @@ a {
   justify-content: space-between;
   gap: 12px;
   padding: 10px 4px 14px;
+  min-height: 12vh;
+}
+
+main {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  overflow: hidden;
+}
+
+main.main-host-mode {
+  align-content: start;
 }
 
 .topbar h1 {
@@ -90,6 +110,43 @@ a {
 .screen {
   display: grid;
   gap: 16px;
+  align-self: center;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.screen-host {
+  align-self: start;
+  align-content: start;
+  justify-self: stretch;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.screen-qr {
+  align-self: stretch;
+  align-content: stretch;
+  justify-self: stretch;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.payment-stage {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto;
+}
+
+.payment-stage-inner {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  max-height: 100%;
 }
 
 .panel {
@@ -142,6 +199,10 @@ legend {
 
 .panel-heading {
   margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .panel-heading h3,
@@ -155,6 +216,13 @@ legend {
   font-size: 0.92rem;
 }
 
+.small-ghost-button {
+  min-height: 36px;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
 .preset-grid,
 .tip-grid,
 .emoji-picker,
@@ -162,6 +230,13 @@ legend {
 .action-stack {
   display: grid;
   gap: 10px;
+}
+
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(320px, 420px));
+  justify-content: center;
+  gap: 12px;
 }
 
 .settings-actions,
@@ -184,6 +259,7 @@ legend {
 
 .preset-button,
 .tip-button,
+.payment-method-card,
 .emoji-button,
 .stepper-button,
 .remove-button,
@@ -199,7 +275,8 @@ legend {
 }
 
 .preset-button,
-.tip-button {
+.tip-button,
+.payment-method-card {
   min-height: 84px;
   padding: 14px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
@@ -207,17 +284,64 @@ legend {
 }
 
 .preset-button strong,
-.tip-button strong {
+.tip-button strong,
+.payment-method-card strong {
   display: block;
   font-size: 1rem;
 }
 
 .preset-button span,
-.tip-button span {
+.tip-button span,
+.payment-method-card span {
   display: block;
   margin-top: 6px;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.payment-panel {
+  width: fit-content;
+  max-width: min(100%, 1120px);
+  margin: 0 auto;
+  max-height: 100%;
+  overflow: auto;
+}
+
+.payment-method-card {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.045));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.payment-method-card.selected {
+  background: rgba(136, 181, 255, 0.18);
+  outline: 1px solid rgba(136, 181, 255, 0.32);
+}
+
+.payment-method-card.selected .payment-method-logo:not([alt="Venmo"]) {
+  filter: brightness(0) saturate(0) contrast(200%);
+}
+
+.payment-method-logo {
+  display: block;
+  width: min(100%, 320px);
+  max-height: 128px;
+  object-fit: contain;
+  margin: auto;
+  align-self: center;
+  justify-self: center;
+}
+
+#venmoMethodButton .payment-method-logo {
+  width: min(100%, 384px);
+  max-height: 154px;
 }
 
 .emoji-button {
@@ -232,8 +356,32 @@ legend {
 }
 
 .tip-button.selected {
-  background: rgba(255, 203, 107, 0.2);
-  outline: 1px solid rgba(255, 203, 107, 0.35);
+  background: linear-gradient(135deg, #ffd15a, #ffb347);
+  color: #19130a;
+  outline: 2px solid rgba(255, 223, 128, 0.95);
+  box-shadow: 0 0 0 3px rgba(255, 195, 74, 0.18), 0 14px 28px rgba(255, 172, 47, 0.22);
+}
+
+.tip-button:hover,
+.tip-button:focus-visible {
+  background: linear-gradient(135deg, #ffd15a, #ffb347);
+  color: #19130a;
+  outline: 2px solid rgba(255, 223, 128, 0.95);
+}
+
+.tip-button:hover strong,
+.tip-button:hover span,
+.tip-button:focus-visible strong,
+.tip-button:focus-visible span,
+.tip-button.selected strong,
+.tip-button.selected span {
+  color: #000000;
+}
+
+.tip-button:hover span,
+.tip-button:focus-visible span,
+.tip-button.selected span {
+  opacity: 0.82;
 }
 
 .custom-item-form,
@@ -342,9 +490,43 @@ textarea {
   font-size: 1.15rem;
 }
 
+#markPaidButton,
+#newOrderButton {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
 .cart-list {
   display: grid;
   gap: 12px;
+}
+
+.host-cart-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.host-cart-body {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+}
+
+.host-cart-body .empty-state {
+  margin-right: 4px;
+}
+
+.host-cart-body .cart-list {
+  min-height: 0;
+  padding-right: 4px;
 }
 
 .cart-item {
@@ -358,11 +540,14 @@ textarea {
 }
 
 .guest-cart-list .cart-item {
+  grid-template-columns: minmax(0, 1fr) auto auto;
   padding: 7px 0;
   border-radius: 0;
   background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-  gap: 10px;
+  gap: 16px;
+  min-height: 58px;
+  align-items: center;
 }
 
 .guest-cart-list .cart-item:last-child {
@@ -376,20 +561,33 @@ textarea {
   padding-right: 4px;
 }
 
-.guest-cart-list .cart-meta strong {
+.guest-cart-list .cart-name-cell strong {
   font-size: 0.98rem;
   line-height: 1.12;
 }
 
-.guest-cart-list .cart-meta p {
-  margin-top: 2px;
-  font-size: 0.88rem;
-  line-height: 1.15;
+.guest-cart-list .cart-name-cell,
+.guest-cart-list .cart-detail-cell,
+.guest-cart-list .cart-total-value {
+  align-self: center;
 }
 
-.guest-cart-list > strong {
+.guest-cart-list .cart-detail-cell {
+  font-size: 0.88rem;
+  line-height: 1.15;
+  color: var(--muted);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.guest-cart-list .cart-total-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   font-size: 1rem;
   line-height: 1;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .cart-meta strong,
@@ -510,6 +708,7 @@ textarea {
   margin-top: 18px;
   padding-top: 18px;
   border-top: 2px solid rgba(255, 255, 255, 0.18);
+  background: var(--panel);
 }
 
 .host-subtotal-row {
@@ -535,6 +734,7 @@ textarea {
 .summary-row strong {
   font-size: 1.2rem;
   letter-spacing: -0.02em;
+  text-align: right;
 }
 
 .total-row strong {
@@ -565,7 +765,13 @@ textarea {
 }
 
 .qr-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
+  height: 100%;
+  max-height: 100%;
+  overflow: auto;
 }
 
 .qr-code {
@@ -576,19 +782,70 @@ textarea {
 
 .qr-code img,
 .qr-code canvas {
-  border-radius: 18px;
+  border-radius: 24px;
   background: white;
   padding: 12px;
+  width: 264px;
+  height: 264px;
   max-width: 100%;
-  height: auto;
+  object-fit: contain;
+}
+
+.zelle-qr-code {
+  display: block;
+  width: 264px;
+  height: 264px;
+  margin: 0 auto;
+  padding: 12px;
+  border-radius: 24px;
+  background: white;
+  object-fit: contain;
+  max-width: 100%;
+}
+
+.zelle-qr-logo {
+  display: block;
+  width: min(100%, 216px);
+  max-height: 88px;
+  margin: 0 auto 24px;
+  object-fit: contain;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+#venmoQrLogo {
+  width: min(100%, 216px);
+  max-height: 88px;
+}
+
+.qr-static {
+  margin-bottom: 18px;
 }
 
 .qr-help {
   margin: 8px 0 0;
 }
 
+.qr-help-primary {
+  margin-top: 12px;
+  font-size: clamp(1.12rem, 2.2vw, 1.34rem);
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
 .qr-help.subtle {
   font-size: 0.92rem;
+}
+
+.zelle-amount-display {
+  margin-top: 10px;
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text);
 }
 
 .url-field {
@@ -604,6 +861,15 @@ textarea {
 .host-stack {
   display: grid;
   gap: 16px;
+  min-height: 0;
+}
+
+#hostAdminView {
+  height: 100%;
+  min-height: 0;
+  align-content: start;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .admin-tabs {
@@ -634,6 +900,27 @@ textarea {
   gap: 10px;
 }
 
+.report-filter-bar {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.report-date-field {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.report-date-field span {
+  font-size: 0.92rem;
+}
+
+.report-date-field input {
+  min-height: 46px;
+  padding: 12px 14px;
+}
+
 .report-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 16px;
@@ -652,12 +939,14 @@ textarea {
   border-radius: var(--radius-md);
   background: linear-gradient(135deg, rgba(123, 201, 255, 0.16), rgba(123, 201, 255, 0.06));
   border: 1px solid rgba(123, 201, 255, 0.16);
+  text-align: right;
 }
 
 .checkout-total-card span {
   display: block;
   color: var(--muted);
   font-size: 0.95rem;
+  text-align: right;
 }
 
 .checkout-total-card strong {
@@ -665,12 +954,15 @@ textarea {
   margin-top: 6px;
   font-size: clamp(2rem, 5vw, 2.8rem);
   letter-spacing: -0.04em;
+  text-align: right;
 }
 
 .guest-checkout-panel {
   display: grid;
   gap: 14px;
   padding-top: 6px;
+  max-height: 100%;
+  overflow: auto;
 }
 
 .checkout-section {
@@ -707,6 +999,29 @@ textarea {
   letter-spacing: 0;
 }
 
+.guest-subtotal-row span,
+.guest-tip-row span {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.guest-tip-row {
+  padding-top: 0;
+  border-top: 0;
+  margin-bottom: 4px;
+}
+
+.guest-tip-row span,
+.guest-tip-row strong {
+  font-size: 1.02rem;
+  letter-spacing: 0;
+}
+
+.guest-tip-section {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
 .single-row-tip-grid {
   display: flex;
   gap: 10px;
@@ -722,19 +1037,38 @@ textarea {
   text-align: center;
 }
 
+.single-row-tip-grid .tip-button strong {
+  font-size: 1.3rem;
+  line-height: 1.05;
+}
+
 .single-row-tip-grid .tip-button span {
   margin-top: 4px;
-  font-size: 0.82rem;
+  font-size: 0.98rem;
   color: var(--muted);
+}
+
+.single-row-tip-grid .tip-button:hover span,
+.single-row-tip-grid .tip-button:focus-visible span,
+.single-row-tip-grid .tip-button.selected span {
+  color: #000000;
 }
 
 .qr-note-section,
 .guest-total-stack {
   padding-top: 14px;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.guest-total-actions {
+  display: grid;
+  gap: 12px;
+  align-items: stretch;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .guest-total-stack {
+  padding-top: 0;
   gap: 12px;
 }
 
@@ -743,7 +1077,7 @@ textarea {
 }
 
 .final-total-card strong {
-  font-size: clamp(2.4rem, 6vw, 3.2rem);
+  font-size: clamp(2.1rem, 5.1vw, 2.85rem);
 }
 
 .guest-total-stack .summary-row:first-child {
@@ -757,7 +1091,11 @@ textarea {
 }
 
 .guest-confirm-button {
-  margin-top: 6px;
+  margin-top: 0;
+  min-height: 100%;
+  height: 100%;
+  align-self: stretch;
+  font-size: 1.16rem;
 }
 
 #clearReportButton {
@@ -813,6 +1151,46 @@ textarea {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   padding: 20px;
+}
+
+.tip-modal-card {
+  width: min(100%, 360px);
+}
+
+.tip-modal-display-wrap {
+  margin-bottom: 16px;
+}
+
+.tip-modal-display {
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: clamp(2rem, 7vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-align: right;
+}
+
+.tip-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tip-key {
+  min-height: 64px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tip-key-muted {
+  color: var(--muted);
 }
 
 .preset-row {
@@ -910,6 +1288,19 @@ a[aria-disabled="true"] {
   .inline-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .guest-total-actions {
+    grid-template-columns: minmax(0, 1fr) 220px;
+  }
+
+  .payment-method-grid {
+    grid-template-columns: repeat(2, minmax(360px, 440px));
+  }
+
+  .payment-panel {
+    width: fit-content;
+    margin: 0 auto;
+  }
 }
 
 @media (min-width: 800px) {
@@ -944,7 +1335,9 @@ a[aria-disabled="true"] {
 
   #hostComposerView {
     grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
-    align-items: start;
+    height: 100%;
+    min-height: 0;
+    align-items: stretch;
   }
 
   #hostAdminView {
@@ -954,6 +1347,7 @@ a[aria-disabled="true"] {
 
   .host-quick-add-panel,
   .host-cart-panel {
+    height: 100%;
     min-height: 100%;
   }
 

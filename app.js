@@ -29,6 +29,9 @@ const appState = {
   cart: [],
   settings: loadSettings(),
   report: loadReport(),
+  reportFilterDate: getTodayDateString(),
+  reportLoading: false,
+  paymentMethod: "venmo",
   tipSelection: "none",
   customTipAmount: 0,
   qrCode: null,
@@ -36,12 +39,15 @@ const appState = {
   adminTab: "items",
   draggedPresetItemId: null,
   itemModalMode: null,
+  tipModalValue: "",
   supabaseClient: null
 };
 
 const elements = {
   hostScreen: document.getElementById("hostScreen"),
+  mainContent: document.getElementById("mainContent"),
   guestScreen: document.getElementById("guestScreen"),
+  paymentScreen: document.getElementById("paymentScreen"),
   qrScreen: document.getElementById("qrScreen"),
   hostComposerView: document.getElementById("hostComposerView"),
   hostAdminView: document.getElementById("hostAdminView"),
@@ -57,10 +63,13 @@ const elements = {
   hostCartList: document.getElementById("hostCartList"),
   hostCartEmpty: document.getElementById("hostCartEmpty"),
   hostSubtotal: document.getElementById("hostSubtotal"),
+  clearCartButton: document.getElementById("clearCartButton"),
   reportOrderCount: document.getElementById("reportOrderCount"),
   reportRevenue: document.getElementById("reportRevenue"),
   reportSubtotal: document.getElementById("reportSubtotal"),
   reportTips: document.getElementById("reportTips"),
+  reportDateFilter: document.getElementById("reportDateFilter"),
+  reportTodayButton: document.getElementById("reportTodayButton"),
   reportTopItems: document.getElementById("reportTopItems"),
   reportRecentOrders: document.getElementById("reportRecentOrders"),
   clearReportButton: document.getElementById("clearReportButton"),
@@ -71,13 +80,25 @@ const elements = {
   qrNoteEditorPreview: document.getElementById("qrNoteEditorPreview"),
   guestNotePicker: document.getElementById("guestNotePicker"),
   tipOptions: document.getElementById("tipOptions"),
-  customTipLabel: document.getElementById("customTipLabel"),
-  customTipInput: document.getElementById("customTipInput"),
+  guestTip: document.getElementById("guestTip"),
   guestTotal: document.getElementById("guestTotal"),
   confirmTotalButton: document.getElementById("confirmTotalButton"),
+  venmoMethodButton: document.getElementById("venmoMethodButton"),
+  zelleMethodButton: document.getElementById("zelleMethodButton"),
+  qrSummaryStack: document.getElementById("qrSummaryStack"),
   qrTotal: document.getElementById("qrTotal"),
+  qrMethodName: document.getElementById("qrMethodName"),
+  qrNoteSummaryRow: document.getElementById("qrNoteSummaryRow"),
+  qrNoteSection: document.getElementById("qrNoteSection"),
   qrNotePreview: document.getElementById("qrNotePreview"),
   qrCode: document.getElementById("qrCode"),
+  venmoQrLogo: document.getElementById("venmoQrLogo"),
+  zelleQrWrap: document.getElementById("zelleQrWrap"),
+  qrHelpPrimary: document.getElementById("qrHelpPrimary"),
+  qrHelpSecondary: document.getElementById("qrHelpSecondary"),
+  qrHelpTertiary: document.getElementById("qrHelpTertiary"),
+  zelleAmountDisplay: document.getElementById("zelleAmountDisplay"),
+  venmoUrlField: document.getElementById("venmoUrlField"),
   venmoUrlOutput: document.getElementById("venmoUrlOutput"),
   openVenmoButton: document.getElementById("openVenmoButton"),
   markPaidButton: document.getElementById("markPaidButton"),
@@ -98,7 +119,12 @@ const elements = {
   itemModalName: document.getElementById("itemModalName"),
   itemModalPrice: document.getElementById("itemModalPrice"),
   itemModalSubmit: document.getElementById("itemModalSubmit"),
-  closeItemModalButton: document.getElementById("closeItemModalButton")
+  closeItemModalButton: document.getElementById("closeItemModalButton"),
+  tipModal: document.getElementById("tipModal"),
+  tipModalDisplay: document.getElementById("tipModalDisplay"),
+  tipNumpad: document.getElementById("tipNumpad"),
+  applyTipButton: document.getElementById("applyTipButton"),
+  closeTipModalButton: document.getElementById("closeTipModalButton")
 };
 
 function init() {
@@ -107,7 +133,9 @@ function init() {
   bindEvents();
   renderAll();
   registerServiceWorker();
-  syncFromCloudOnLoad();
+  syncFromCloudOnLoad().finally(() => {
+    refreshReportData();
+  });
 }
 
 function bindEvents() {
@@ -116,15 +144,23 @@ function bindEvents() {
   elements.itemModal.addEventListener("click", handleModalBackdropClick);
   elements.handToGuestButton.addEventListener("click", goToGuestScreen);
   elements.tipOptions.addEventListener("click", handleTipClick);
-  elements.customTipInput.addEventListener("input", handleCustomTipChange);
+  elements.tipNumpad.addEventListener("click", handleTipNumpadClick);
+  elements.applyTipButton.addEventListener("click", applyCustomTipFromModal);
+  elements.closeTipModalButton.addEventListener("click", closeTipModal);
+  elements.tipModal.addEventListener("click", handleModalBackdropClick);
   elements.stepBackButton.addEventListener("click", goBackOneStep);
-  elements.confirmTotalButton.addEventListener("click", goToQrScreen);
+  elements.confirmTotalButton.addEventListener("click", goToPaymentScreen);
+  elements.venmoMethodButton.addEventListener("click", () => choosePaymentMethod("venmo"));
+  elements.zelleMethodButton.addEventListener("click", () => choosePaymentMethod("zelle"));
+  elements.clearCartButton.addEventListener("click", clearCart);
   elements.markPaidButton.addEventListener("click", markOrderPaid);
   elements.newOrderButton.addEventListener("click", resetOrder);
   elements.settingsToggle.addEventListener("click", toggleSettings);
   elements.itemsTabButton.addEventListener("click", () => switchAdminTab("items"));
   elements.reportTabButton.addEventListener("click", () => switchAdminTab("report"));
   elements.advancedTabButton.addEventListener("click", () => switchAdminTab("advanced"));
+  elements.reportDateFilter.addEventListener("change", handleReportDateChange);
+  elements.reportTodayButton.addEventListener("click", setReportDateToToday);
   elements.clearReportButton.addEventListener("click", clearReport);
   elements.saveItemsButton.addEventListener("click", handleItemSettingsSave);
   elements.settingsForm.addEventListener("submit", handleSettingsSave);
@@ -255,11 +291,11 @@ function renderGuestCart() {
     const row = document.createElement("div");
     row.className = "cart-item";
     row.innerHTML = `
-      <div class="cart-meta">
+      <div class="cart-name-cell">
         <strong>${escapeHtml(item.name)}</strong>
-        <p>${item.quantity} × ${formatCurrency(item.price)}</p>
       </div>
-      <strong>${formatCurrency(item.price * item.quantity)}</strong>
+      <div class="cart-detail-cell">${item.quantity} × ${formatCurrency(item.price)}</div>
+      <strong class="cart-total-value">${formatCurrency(item.price * item.quantity)}</strong>
     `;
     elements.guestCartList.appendChild(row);
   });
@@ -276,15 +312,10 @@ function renderTipOptions() {
     button.dataset.tipId = option.id;
     const tipAmount = option.type === "percent"
       ? formatCurrency(roundMoney(subtotal * option.value))
-      : "Enter amount";
+      : appState.customTipAmount > 0 ? formatCurrency(appState.customTipAmount) : "Enter amount";
     button.innerHTML = `<strong>${option.label}</strong><span>${tipAmount}</span>`;
     elements.tipOptions.appendChild(button);
   });
-
-  elements.customTipLabel.classList.toggle("hidden", appState.tipSelection !== "custom");
-  elements.customTipInput.value = appState.tipSelection === "custom" && appState.customTipAmount > 0
-    ? appState.customTipAmount.toFixed(2)
-    : "";
 }
 
 function renderSettingsForm() {
@@ -458,9 +489,12 @@ function updateSummary() {
 
   setElementText(elements.hostSubtotal, formatCurrency(subtotal));
   setElementText(elements.guestSubtotal, formatCurrency(subtotal));
+  setElementText(elements.guestTip, formatCurrency(tip));
   setElementText(elements.guestTotal, formatCurrency(total));
   setElementText(elements.qrNoteEditorPreview, note || "No icons selected");
   setElementText(elements.qrTotal, formatCurrency(total));
+  setElementText(elements.zelleAmountDisplay, formatCurrency(total));
+  setElementText(elements.qrMethodName, appState.paymentMethod === "zelle" ? "Zelle" : "Venmo");
   setElementText(elements.qrNotePreview, note || "No icons selected");
   setElementValue(elements.venmoUrlOutput, venmoUrl);
   setElementHref(elements.openVenmoButton, venmoUrl);
@@ -469,11 +503,23 @@ function updateSummary() {
   elements.markPaidButton.disabled = total <= 0;
 
   if (appState.screen === "qr") {
-    renderQrCode(venmoUrl);
+    renderPaymentQr();
   }
 }
 
 function renderReport() {
+  elements.reportDateFilter.value = appState.reportFilterDate;
+
+  if (appState.reportLoading) {
+    elements.reportOrderCount.textContent = "…";
+    elements.reportRevenue.textContent = "…";
+    elements.reportSubtotal.textContent = "…";
+    elements.reportTips.textContent = "…";
+    elements.reportTopItems.innerHTML = `<div class="empty-state"><p>Loading sales…</p></div>`;
+    elements.reportRecentOrders.innerHTML = `<div class="empty-state"><p>Loading sales…</p></div>`;
+    return;
+  }
+
   const orders = appState.report.orders;
   const metrics = getReportMetrics();
 
@@ -535,12 +581,27 @@ function renderRecentOrders(orders) {
     });
 }
 
+function handleReportDateChange() {
+  const nextDate = elements.reportDateFilter.value || getTodayDateString();
+  appState.reportFilterDate = nextDate;
+  refreshReportData();
+}
+
+function setReportDateToToday() {
+  appState.reportFilterDate = getTodayDateString();
+  refreshReportData();
+}
+
 function updateScreen() {
+  elements.mainContent.classList.toggle("main-host-mode", appState.screen === "host");
   elements.hostScreen.classList.toggle("hidden", appState.screen !== "host");
   elements.guestScreen.classList.toggle("hidden", appState.screen !== "guest");
+  elements.paymentScreen.classList.toggle("hidden", appState.screen !== "payment");
   elements.qrScreen.classList.toggle("hidden", appState.screen !== "qr");
   elements.settingsToggle.classList.toggle("hidden", appState.screen !== "host");
   elements.stepBackButton.classList.toggle("hidden", appState.screen === "host");
+  elements.markPaidButton.classList.toggle("hidden", appState.screen !== "qr");
+  elements.newOrderButton.classList.toggle("hidden", appState.screen !== "qr");
   elements.hostComposerView.classList.toggle("hidden", appState.screen !== "host" || appState.hostAdminOpen);
   elements.hostAdminView.classList.toggle("hidden", appState.screen !== "host" || !appState.hostAdminOpen);
   elements.itemsPanel.classList.toggle("hidden", appState.adminTab !== "items");
@@ -554,9 +615,11 @@ function updateScreen() {
   elements.advancedTabButton.setAttribute("aria-selected", appState.adminTab === "advanced" ? "true" : "false");
   elements.settingsToggle.setAttribute("aria-label", appState.hostAdminOpen ? "Close settings" : "Open settings");
   elements.settingsToggle.textContent = appState.hostAdminOpen ? "✕" : "⚙️";
+  elements.venmoMethodButton.classList.toggle("selected", appState.paymentMethod === "venmo");
+  elements.zelleMethodButton.classList.toggle("selected", appState.paymentMethod === "zelle");
 
   if (appState.screen === "qr") {
-    renderQrCode(elements.venmoUrlOutput.value);
+    renderPaymentQr();
   }
 }
 
@@ -594,6 +657,22 @@ function updateCartItemQuantity(id, nextQuantity) {
 
 function removeCartItem(id) {
   appState.cart = appState.cart.filter((item) => item.id !== id);
+  persistCart();
+  renderAll();
+}
+
+function clearCart() {
+  if (!appState.cart.length) {
+    return;
+  }
+
+  if (!window.confirm("Clear the cart?")) {
+    return;
+  }
+
+  appState.cart = [];
+  appState.tipSelection = "none";
+  appState.customTipAmount = 0;
   persistCart();
   renderAll();
 }
@@ -674,9 +753,24 @@ function closeItemModal() {
   elements.itemModal.classList.add("hidden");
 }
 
+function openTipModal() {
+  appState.tipModalValue = appState.tipSelection === "custom" && appState.customTipAmount > 0
+    ? normalizeTipInput(appState.customTipAmount.toFixed(2))
+    : "";
+  updateTipModalDisplay();
+  elements.tipModal.classList.remove("hidden");
+}
+
+function closeTipModal() {
+  appState.tipModalValue = "";
+  elements.tipModal.classList.add("hidden");
+}
+
 function handleModalBackdropClick(event) {
   if (event.target === elements.itemModal) {
     closeItemModal();
+  } else if (event.target === elements.tipModal) {
+    closeTipModal();
   }
 }
 
@@ -686,24 +780,61 @@ function handleTipClick(event) {
     return;
   }
 
-  appState.tipSelection = button.dataset.tipId;
-  if (appState.tipSelection !== "custom") {
-    appState.customTipAmount = 0;
+  const tipId = button.dataset.tipId;
+  if (tipId === "custom") {
+    openTipModal();
+    return;
   }
+
+  appState.tipSelection = tipId;
+  appState.customTipAmount = 0;
   renderTipOptions();
   updateSummary();
 }
 
-function handleCustomTipChange(event) {
-  const parsed = Number.parseFloat(event.target.value);
-  if (event.target.value === "") {
-    appState.customTipAmount = 0;
-  } else if (!Number.isFinite(parsed) || parsed < 0) {
-    appState.customTipAmount = -1;
-    showMessage("Custom tip cannot be below zero.");
-  } else {
-    appState.customTipAmount = roundMoney(parsed);
+function handleTipNumpadClick(event) {
+  const button = event.target.closest("[data-tip-key]");
+  if (!button) {
+    return;
   }
+
+  const key = button.dataset.tipKey;
+
+  if (key === "clear") {
+    appState.tipModalValue = "";
+    updateTipModalDisplay();
+    return;
+  }
+
+  if (key === "double-zero") {
+    if (appState.tipModalValue.length >= 7) {
+      return;
+    }
+    appState.tipModalValue = `${appState.tipModalValue}00`;
+    updateTipModalDisplay();
+    return;
+  }
+
+  if (appState.tipModalValue.length >= 7) {
+    return;
+  }
+
+  appState.tipModalValue = `${appState.tipModalValue}${key}`;
+  updateTipModalDisplay();
+}
+
+function applyCustomTipFromModal() {
+  const parsed = parseTipModalValue(appState.tipModalValue);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    showMessage("Custom tip cannot be below zero.");
+    return;
+  }
+
+  appState.tipSelection = "custom";
+  appState.customTipAmount = roundMoney(parsed);
+  closeTipModal();
+  renderTipOptions();
   updateSummary();
 }
 
@@ -737,9 +868,11 @@ function handleSettingsSave(event) {
   syncSettingsToCloud()
     .then((didSync) => {
       showMessage(didSync ? "Settings saved and synced." : "Settings saved on this device.", true);
+      refreshReportData();
     })
     .catch(() => {
       showMessage("Settings saved locally. Cloud sync failed.", true);
+      refreshReportData();
     });
 }
 
@@ -786,7 +919,7 @@ function goToGuestScreen() {
   switchScreen("guest");
 }
 
-function goToQrScreen() {
+function goToPaymentScreen() {
   if (getSubtotal() <= 0) {
     showMessage("This reimbursement is empty.");
     return;
@@ -797,11 +930,21 @@ function goToQrScreen() {
     return;
   }
 
+  switchScreen("payment");
+}
+
+function choosePaymentMethod(method) {
+  appState.paymentMethod = method;
   switchScreen("qr");
 }
 
 function goBackOneStep() {
   if (appState.screen === "qr") {
+    switchScreen("payment");
+    return;
+  }
+
+  if (appState.screen === "payment") {
     switchScreen("guest");
     return;
   }
@@ -811,7 +954,7 @@ function goBackOneStep() {
   }
 }
 
-function markOrderPaid() {
+async function markOrderPaid() {
   const summary = getOrderSummary();
 
   if (summary.total <= 0) {
@@ -838,13 +981,15 @@ function markOrderPaid() {
   appState.report.orders.push(order);
 
   saveReport();
-  sendSaleToCloud(order);
+  await sendSaleToCloud(order);
+  await refreshReportData({ silent: true });
   resetOrder(false);
   showMessage("Sale added to the sales report.", true);
 }
 
 function resetOrder(showSuccessMessage = true) {
   appState.cart = [];
+  appState.paymentMethod = "venmo";
   appState.tipSelection = "none";
   appState.customTipAmount = 0;
   appState.screen = "host";
@@ -865,6 +1010,9 @@ function toggleSettings() {
 function switchAdminTab(tab) {
   appState.adminTab = tab;
   updateScreen();
+  if (tab === "report") {
+    refreshReportData({ silent: true });
+  }
 }
 
 function getSubtotal() {
@@ -905,6 +1053,27 @@ function getVenmoUrl(total, note) {
   return `https://venmo.com/${encodeURIComponent(appState.settings.venmoUsername)}?${params.toString()}`;
 }
 
+function updateTipModalDisplay() {
+  setElementText(elements.tipModalDisplay, formatCurrency(parseTipModalValue(appState.tipModalValue)));
+}
+
+function parseTipModalValue(value) {
+  if (!value) {
+    return 0;
+  }
+
+  const digits = value.replace(/\D/g, "");
+  if (!digits) {
+    return 0;
+  }
+
+  return Number.parseInt(digits, 10) / 100;
+}
+
+function normalizeTipInput(value) {
+  return String(value).replace(/[^\d]/g, "");
+}
+
 function renderQrCode(url) {
   elements.qrCode.innerHTML = "";
 
@@ -924,6 +1093,35 @@ function renderQrCode(url) {
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.M
   });
+}
+
+function renderPaymentQr() {
+  const { venmoUrl } = getOrderSummary();
+  const isVenmo = appState.paymentMethod === "venmo";
+
+  elements.qrCode.classList.toggle("hidden", !isVenmo);
+  elements.venmoQrLogo.classList.toggle("hidden", !isVenmo);
+  elements.zelleQrWrap.classList.toggle("hidden", isVenmo);
+  elements.zelleAmountDisplay.classList.toggle("hidden", false);
+  elements.qrSummaryStack.classList.toggle("hidden", true);
+  elements.qrNoteSummaryRow.classList.toggle("hidden", true);
+  elements.qrNoteSection.classList.toggle("hidden", true);
+  elements.venmoUrlField.classList.toggle("hidden", true);
+  elements.openVenmoButton.classList.toggle("hidden", true);
+  elements.qrHelpTertiary.classList.toggle("hidden", isVenmo);
+
+  if (isVenmo) {
+    setElementText(elements.qrHelpPrimary, "Use your phone camera to scan this QR code, then confirm payment in Venmo.");
+    setElementText(elements.qrHelpSecondary, "Please confirm the amount inside Venmo before sending.");
+    setElementText(elements.qrHelpTertiary, "");
+    renderQrCode(venmoUrl);
+    return;
+  }
+
+  setElementText(elements.qrHelpPrimary, "Scan this Zelle QR code in your bank app.");
+  setElementText(elements.qrHelpSecondary, "Please enter the total shown here before sending with Zelle.");
+  setElementText(elements.qrHelpTertiary, "Recipient name will show as CHRISTOPHER LEQUANG in Zelle.");
+  elements.qrCode.innerHTML = "";
 }
 
 function loadSettings() {
@@ -991,11 +1189,33 @@ function saveReport() {
   window.localStorage.setItem(STORAGE_KEYS.report, JSON.stringify(appState.report));
 }
 
-function clearReport() {
-  appState.report = { orders: [] };
-  saveReport();
-  renderReport();
-  showMessage("Sales report cleared from this device.", true);
+async function clearReport() {
+  const label = formatReportDay(appState.reportFilterDate);
+  if (!window.confirm(`Delete all sales for ${label}?`)) {
+    return;
+  }
+
+  if (hasCloudConfig()) {
+    const { error } = await appState.supabaseClient
+      .from("sales_events")
+      .delete()
+      .eq("workspace_key", appState.settings.workspaceKey)
+      .eq("sale_date", appState.reportFilterDate);
+
+    if (error) {
+      showMessage("Could not clear sales for that day.");
+      return;
+    }
+  }
+
+  appState.report = {
+    orders: appState.report.orders.filter((order) => order.timestamp.slice(0, 10) !== appState.reportFilterDate)
+  };
+  const localReport = loadReport();
+  localReport.orders = localReport.orders.filter((order) => String(order.timestamp || "").slice(0, 10) !== appState.reportFilterDate);
+  window.localStorage.setItem(STORAGE_KEYS.report, JSON.stringify(localReport));
+  await refreshReportData({ silent: true });
+  showMessage(`Sales cleared for ${label}.`, true);
 }
 
 function getReportMetrics() {
@@ -1136,13 +1356,13 @@ async function syncSettingsToCloud() {
 
 async function sendSaleToCloud(order) {
   if (!hasCloudConfig()) {
-    return;
+    return false;
   }
 
   const saleDate = order.timestamp.slice(0, 10);
 
   try {
-    await appState.supabaseClient
+    const { error } = await appState.supabaseClient
       .from("sales_events")
       .insert({
         workspace_key: appState.settings.workspaceKey,
@@ -1156,9 +1376,65 @@ async function sendSaleToCloud(order) {
         items_json: order.items,
         created_at: order.timestamp
       });
+    if (error) {
+      throw error;
+    }
+    return true;
   } catch (error) {
     showMessage("Saved locally. Supabase sales sync failed.");
+    return false;
   }
+}
+
+async function refreshReportData(options = {}) {
+  const { silent = false } = options;
+  const fallbackOrders = getLocalOrdersForDate(appState.reportFilterDate);
+
+  if (!hasCloudConfig()) {
+    appState.report.orders = fallbackOrders;
+    renderReport();
+    return;
+  }
+
+  if (!silent) {
+    appState.reportLoading = true;
+    renderReport();
+  }
+
+  try {
+    const { data, error } = await appState.supabaseClient
+      .from("sales_events")
+      .select("order_id, sale_date, subtotal, tip, total, note, item_count, items_json, created_at")
+      .eq("workspace_key", appState.settings.workspaceKey)
+      .eq("sale_date", appState.reportFilterDate)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    appState.report.orders = (data || []).map((row) => ({
+      id: row.order_id,
+      timestamp: row.created_at,
+      subtotal: Number(row.subtotal) || 0,
+      tip: Number(row.tip) || 0,
+      total: Number(row.total) || 0,
+      note: row.note || "",
+      itemCount: Number(row.item_count) || 0,
+      items: Array.isArray(row.items_json) ? row.items_json : []
+    }));
+  } catch (error) {
+    appState.report.orders = fallbackOrders;
+    showMessage("Could not load report from Supabase. Showing local sales for that day.");
+  } finally {
+    appState.reportLoading = false;
+    renderReport();
+  }
+}
+
+function getLocalOrdersForDate(dateString) {
+  const local = loadReport().orders;
+  return local.filter((order) => String(order.timestamp || "").slice(0, 10) === dateString);
 }
 
 function normalizeSettings(settings) {
@@ -1244,6 +1520,27 @@ function formatReportDate(value) {
     hour: "numeric",
     minute: "2-digit"
   }).format(new Date(value));
+}
+
+function formatReportDay(value) {
+  const [year, month, day] = String(value).split("-").map(Number);
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(year, month - 1, day));
+}
+
+function getTodayDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function createId() {
