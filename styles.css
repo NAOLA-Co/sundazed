@@ -57,7 +57,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 4px 18px;
+  padding: 10px 4px 14px;
 }
 
 .topbar h1 {
@@ -77,13 +77,14 @@ a {
 }
 
 .logo-wordmark img {
-  width: min(100%, 280px);
+  width: min(100%, 220px);
   height: auto;
 }
 
 .topbar-actions {
   display: flex;
   gap: 8px;
+  min-height: 44px;
 }
 
 .screen {
@@ -357,14 +358,38 @@ textarea {
 }
 
 .guest-cart-list .cart-item {
-  padding: 10px 0;
+  padding: 7px 0;
   border-radius: 0;
   background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  gap: 10px;
 }
 
 .guest-cart-list .cart-item:last-child {
   border-bottom: 0;
+}
+
+.guest-cart-list {
+  gap: 0;
+  max-height: 258px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.guest-cart-list .cart-meta strong {
+  font-size: 0.98rem;
+  line-height: 1.12;
+}
+
+.guest-cart-list .cart-meta p {
+  margin-top: 2px;
+  font-size: 0.88rem;
+  line-height: 1.15;
+}
+
+.guest-cart-list > strong {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .cart-meta strong,
@@ -413,7 +438,9 @@ textarea {
 }
 
 .host-cart-item {
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 14px;
+  align-items: center;
 }
 
 .host-cart-item .cart-meta strong {
@@ -428,6 +455,8 @@ textarea {
 
 .host-cart-item .cart-controls {
   gap: 10px;
+  justify-self: end;
+  justify-content: flex-end;
 }
 
 .host-cart-item .stepper-button {
@@ -437,6 +466,18 @@ textarea {
 
 .host-cart-item .quantity-badge {
   min-width: 22px;
+}
+
+.host-cart-item .cart-total-cell {
+  justify-self: end;
+  text-align: right;
+  min-width: 74px;
+}
+
+.host-cart-item .cart-line-total {
+  margin-top: 0;
+  font-size: 1.08rem;
+  line-height: 1;
 }
 
 .quantity-badge {
@@ -628,15 +669,15 @@ textarea {
 
 .guest-checkout-panel {
   display: grid;
-  gap: 18px;
-  padding-top: 8px;
+  gap: 14px;
+  padding-top: 6px;
 }
 
 .checkout-section {
   display: grid;
-  gap: 12px;
-  padding-top: 18px;
-  border-top: 2px solid rgba(255, 255, 255, 0.16);
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .checkout-section-body {
@@ -656,13 +697,13 @@ textarea {
 }
 
 .guest-subtotal-row {
-  padding-top: 16px;
+  padding-top: 12px;
   margin-top: 2px;
 }
 
 .guest-subtotal-row span,
 .guest-subtotal-row strong {
-  font-size: 1rem;
+  font-size: 1.02rem;
   letter-spacing: 0;
 }
 
@@ -689,8 +730,8 @@ textarea {
 
 .qr-note-section,
 .guest-total-stack {
-  padding-top: 18px;
-  border-top: 2px solid rgba(255, 255, 255, 0.16);
+  padding-top: 14px;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .guest-total-stack {
@@ -710,8 +751,13 @@ textarea {
   border-top: 0;
 }
 
+.action-row {
+  display: grid;
+  gap: 12px;
+}
+
 .guest-confirm-button {
-  margin-top: 18px;
+  margin-top: 6px;
 }
 
 #clearReportButton {
@@ -925,6 +971,10 @@ a[aria-disabled="true"] {
 
   .host-cart-item .stepper-button {
     min-height: 36px;
+  }
+
+  .host-cart-item .cart-total-cell {
+    min-width: 82px;
   }
 
   #hostAdminView .panel {

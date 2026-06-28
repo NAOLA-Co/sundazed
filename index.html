@@ -22,7 +22,7 @@
         </h1>
       </div>
       <div class="topbar-actions">
-        <button id="hostEditShortcut" class="ghost-button hidden" type="button">Host Edit</button>
+        <button id="stepBackButton" class="ghost-button hidden" type="button">Back</button>
         <button id="settingsToggle" class="icon-button settings-icon-button" type="button" aria-label="Open settings">⚙️</button>
       </div>
     </header>
@@ -179,14 +179,6 @@
           </section>
 
           <div class="summary-stack total-stack guest-total-stack">
-            <div class="summary-row">
-              <span>Subtotal</span>
-              <strong id="guestSummarySubtotal">$0.00</strong>
-            </div>
-            <div class="summary-row">
-              <span>Tip</span>
-              <strong id="guestTip">$0.00</strong>
-            </div>
             <div class="checkout-total-card final-total-card">
               <span>Final Total</span>
               <strong id="guestTotal">$0.00</strong>
@@ -228,7 +220,6 @@
           <div class="action-stack">
             <a id="openVenmoButton" class="primary-button" href="#" target="_blank" rel="noopener noreferrer">Open Venmo</a>
             <button id="markPaidButton" class="secondary-button" type="button">Payment Marked Received</button>
-            <button id="backToTipButton" class="secondary-button" type="button">Back to Tip</button>
             <button id="newOrderButton" class="ghost-button" type="button">New Order</button>
           </div>
         </section>

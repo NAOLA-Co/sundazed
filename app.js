@@ -49,10 +49,10 @@ const elements = {
   reportPanel: document.getElementById("reportPanel"),
   advancedPanel: document.getElementById("advancedPanel"),
   settingsToggle: document.getElementById("settingsToggle"),
+  stepBackButton: document.getElementById("stepBackButton"),
   itemsTabButton: document.getElementById("itemsTabButton"),
   reportTabButton: document.getElementById("reportTabButton"),
   advancedTabButton: document.getElementById("advancedTabButton"),
-  hostEditShortcut: document.getElementById("hostEditShortcut"),
   presetItems: document.getElementById("presetItems"),
   hostCartList: document.getElementById("hostCartList"),
   hostCartEmpty: document.getElementById("hostCartEmpty"),
@@ -68,13 +68,11 @@ const elements = {
   handToGuestButton: document.getElementById("handToGuestButton"),
   guestCartList: document.getElementById("guestCartList"),
   guestSubtotal: document.getElementById("guestSubtotal"),
-  guestSummarySubtotal: document.getElementById("guestSummarySubtotal"),
   qrNoteEditorPreview: document.getElementById("qrNoteEditorPreview"),
   guestNotePicker: document.getElementById("guestNotePicker"),
   tipOptions: document.getElementById("tipOptions"),
   customTipLabel: document.getElementById("customTipLabel"),
   customTipInput: document.getElementById("customTipInput"),
-  guestTip: document.getElementById("guestTip"),
   guestTotal: document.getElementById("guestTotal"),
   confirmTotalButton: document.getElementById("confirmTotalButton"),
   qrTotal: document.getElementById("qrTotal"),
@@ -83,7 +81,6 @@ const elements = {
   venmoUrlOutput: document.getElementById("venmoUrlOutput"),
   openVenmoButton: document.getElementById("openVenmoButton"),
   markPaidButton: document.getElementById("markPaidButton"),
-  backToTipButton: document.getElementById("backToTipButton"),
   newOrderButton: document.getElementById("newOrderButton"),
   messageBanner: document.getElementById("messageBanner"),
   settingsForm: document.getElementById("settingsForm"),
@@ -120,15 +117,14 @@ function bindEvents() {
   elements.handToGuestButton.addEventListener("click", goToGuestScreen);
   elements.tipOptions.addEventListener("click", handleTipClick);
   elements.customTipInput.addEventListener("input", handleCustomTipChange);
+  elements.stepBackButton.addEventListener("click", goBackOneStep);
   elements.confirmTotalButton.addEventListener("click", goToQrScreen);
   elements.markPaidButton.addEventListener("click", markOrderPaid);
-  elements.backToTipButton.addEventListener("click", () => switchScreen("guest"));
   elements.newOrderButton.addEventListener("click", resetOrder);
   elements.settingsToggle.addEventListener("click", toggleSettings);
   elements.itemsTabButton.addEventListener("click", () => switchAdminTab("items"));
   elements.reportTabButton.addEventListener("click", () => switchAdminTab("report"));
   elements.advancedTabButton.addEventListener("click", () => switchAdminTab("advanced"));
-  elements.hostEditShortcut.addEventListener("click", () => switchScreen("host"));
   elements.clearReportButton.addEventListener("click", clearReport);
   elements.saveItemsButton.addEventListener("click", handleItemSettingsSave);
   elements.settingsForm.addEventListener("submit", handleSettingsSave);
@@ -227,12 +223,14 @@ function renderHostCart() {
       <div class="cart-meta">
         <strong>${escapeHtml(item.name)}</strong>
         <p>${item.quantity} × ${formatCurrency(item.price)}</p>
-        <span class="cart-line-total">${formatCurrency(item.price * item.quantity)}</span>
       </div>
       <div class="cart-controls">
         <button class="stepper-button" type="button" aria-label="Decrease ${escapeHtml(item.name)}">-</button>
         <span class="quantity-badge">${item.quantity}</span>
         <button class="stepper-button" type="button" aria-label="Increase ${escapeHtml(item.name)}">+</button>
+      </div>
+      <div class="cart-total-cell">
+        <span class="cart-line-total">${formatCurrency(item.price * item.quantity)}</span>
       </div>
     `;
 
@@ -460,8 +458,6 @@ function updateSummary() {
 
   setElementText(elements.hostSubtotal, formatCurrency(subtotal));
   setElementText(elements.guestSubtotal, formatCurrency(subtotal));
-  setElementText(elements.guestSummarySubtotal, formatCurrency(subtotal));
-  setElementText(elements.guestTip, formatCurrency(tip));
   setElementText(elements.guestTotal, formatCurrency(total));
   setElementText(elements.qrNoteEditorPreview, note || "No icons selected");
   setElementText(elements.qrTotal, formatCurrency(total));
@@ -544,7 +540,7 @@ function updateScreen() {
   elements.guestScreen.classList.toggle("hidden", appState.screen !== "guest");
   elements.qrScreen.classList.toggle("hidden", appState.screen !== "qr");
   elements.settingsToggle.classList.toggle("hidden", appState.screen !== "host");
-  elements.hostEditShortcut.classList.toggle("hidden", appState.screen === "host");
+  elements.stepBackButton.classList.toggle("hidden", appState.screen === "host");
   elements.hostComposerView.classList.toggle("hidden", appState.screen !== "host" || appState.hostAdminOpen);
   elements.hostAdminView.classList.toggle("hidden", appState.screen !== "host" || !appState.hostAdminOpen);
   elements.itemsPanel.classList.toggle("hidden", appState.adminTab !== "items");
@@ -802,6 +798,17 @@ function goToQrScreen() {
   }
 
   switchScreen("qr");
+}
+
+function goBackOneStep() {
+  if (appState.screen === "qr") {
+    switchScreen("guest");
+    return;
+  }
+
+  if (appState.screen === "guest") {
+    switchScreen("host");
+  }
 }
 
 function markOrderPaid() {
