@@ -49,7 +49,7 @@ a {
 .app-shell {
   max-width: 1280px;
   margin: 0 auto;
-  padding: env(safe-area-inset-top) 16px var(--safe-bottom);
+  padding: env(safe-area-inset-top) 10px var(--safe-bottom);
 }
 
 .topbar {
@@ -356,6 +356,17 @@ textarea {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.guest-cart-list .cart-item {
+  padding: 10px 0;
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.guest-cart-list .cart-item:last-child {
+  border-bottom: 0;
+}
+
 .cart-meta strong,
 .summary-row strong,
 .total-row strong {
@@ -422,12 +433,6 @@ textarea {
 .host-cart-item .stepper-button {
   min-width: 40px;
   padding: 0 10px;
-}
-
-.host-cart-item .remove-button {
-  min-width: 84px;
-  padding: 0 14px;
-  white-space: nowrap;
 }
 
 .host-cart-item .quantity-badge {
@@ -624,15 +629,7 @@ textarea {
 .guest-checkout-panel {
   display: grid;
   gap: 18px;
-}
-
-.guest-checkout-panel .panel-heading {
-  margin-bottom: 0;
-}
-
-.guest-checkout-grid {
-  display: grid;
-  gap: 18px;
+  padding-top: 8px;
 }
 
 .checkout-section {
@@ -640,11 +637,6 @@ textarea {
   gap: 12px;
   padding-top: 18px;
   border-top: 2px solid rgba(255, 255, 255, 0.16);
-}
-
-.guest-checkout-grid .checkout-section {
-  padding-top: 0;
-  border-top: 0;
 }
 
 .checkout-section-body {
@@ -658,16 +650,44 @@ textarea {
   letter-spacing: -0.02em;
 }
 
-.guest-items-column {
-  align-content: start;
+.guest-items-stack:first-of-type {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.guest-actions-column {
-  align-content: start;
-  gap: 18px;
+.guest-subtotal-row {
+  padding-top: 16px;
+  margin-top: 2px;
 }
 
-.note-section,
+.guest-subtotal-row span,
+.guest-subtotal-row strong {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.single-row-tip-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.single-row-tip-grid .tip-button {
+  min-width: 112px;
+  flex: 1 0 112px;
+  min-height: 78px;
+  text-align: center;
+}
+
+.single-row-tip-grid .tip-button span {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.qr-note-section,
 .guest-total-stack {
   padding-top: 18px;
   border-top: 2px solid rgba(255, 255, 255, 0.16);
@@ -675,6 +695,14 @@ textarea {
 
 .guest-total-stack {
   gap: 12px;
+}
+
+.final-total-card {
+  margin-bottom: 0;
+}
+
+.final-total-card strong {
+  font-size: clamp(2.4rem, 6vw, 3.2rem);
 }
 
 .guest-total-stack .summary-row:first-child {
@@ -821,8 +849,8 @@ a[aria-disabled="true"] {
 
 @media (min-width: 640px) {
   .app-shell {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   .screen {
@@ -840,8 +868,8 @@ a[aria-disabled="true"] {
 
 @media (min-width: 800px) {
   .app-shell {
-    padding-left: 24px;
-    padding-right: 24px;
+    padding-left: 18px;
+    padding-right: 18px;
   }
 
   .topbar {
@@ -861,15 +889,6 @@ a[aria-disabled="true"] {
   .guest-checkout-panel {
     width: min(100%, 980px);
     margin: 0 auto;
-  }
-
-  .guest-checkout-grid {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.85fr);
-    align-items: start;
-  }
-
-  .guest-actions-column .tip-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .host-stack,
@@ -904,8 +923,7 @@ a[aria-disabled="true"] {
     gap: 8px;
   }
 
-  .host-cart-item .stepper-button,
-  .host-cart-item .remove-button {
+  .host-cart-item .stepper-button {
     min-height: 36px;
   }
 

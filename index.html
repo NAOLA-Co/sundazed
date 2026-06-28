@@ -160,58 +160,37 @@
 
       <section id="guestScreen" class="screen screen-guest hidden">
         <section class="panel guest-checkout-panel">
-          <div class="panel-heading">
-            <h3>Checkout</h3>
-          </div>
+          <section class="checkout-section guest-items-stack">
+            <h4>Items</h4>
+            <div id="guestCartList" class="cart-list guest-cart-list"></div>
+            <div class="summary-row guest-subtotal-row">
+              <span>Subtotal</span>
+              <strong id="guestSubtotal">$0.00</strong>
+            </div>
+          </section>
 
-          <div class="guest-checkout-grid">
-            <section class="checkout-section guest-items-column">
-              <div class="checkout-total-card">
-                <span>Subtotal</span>
-                <strong id="guestSubtotal">$0.00</strong>
-              </div>
-              <div class="checkout-section-body">
-                <h4>Items</h4>
-                <div id="guestCartList" class="cart-list guest-cart-list"></div>
-              </div>
-            </section>
+          <section class="checkout-section guest-tip-section">
+            <h4>Tip</h4>
+            <div id="tipOptions" class="tip-grid single-row-tip-grid"></div>
+            <label id="customTipLabel" class="custom-tip hidden">
+              <span>Custom Tip Amount</span>
+              <input id="customTipInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+            </label>
+          </section>
 
-            <section class="checkout-section guest-actions-column">
-              <div class="checkout-section-body">
-                <h4>Tip</h4>
-                <div id="tipOptions" class="tip-grid"></div>
-                <label id="customTipLabel" class="custom-tip hidden">
-                  <span>Custom Tip Amount</span>
-                  <input id="customTipInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
-                </label>
-              </div>
-
-              <div class="checkout-section-body note-section">
-                <h4>Note</h4>
-                <div id="guestNotePicker" class="emoji-picker"></div>
-                <div class="summary-stack">
-                  <div class="summary-row">
-                    <span>Selected Note</span>
-                    <strong id="guestNotePreview">🍺🍸</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div class="summary-stack total-stack guest-total-stack">
-                <div class="summary-row">
-                  <span>Subtotal</span>
-                  <strong id="guestSummarySubtotal">$0.00</strong>
-                </div>
-                <div class="summary-row">
-                  <span>Tip</span>
-                  <strong id="guestTip">$0.00</strong>
-                </div>
-                <div class="summary-row total-row">
-                  <span>Final Total</span>
-                  <strong id="guestTotal">$0.00</strong>
-                </div>
-              </div>
-            </section>
+          <div class="summary-stack total-stack guest-total-stack">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong id="guestSummarySubtotal">$0.00</strong>
+            </div>
+            <div class="summary-row">
+              <span>Tip</span>
+              <strong id="guestTip">$0.00</strong>
+            </div>
+            <div class="checkout-total-card final-total-card">
+              <span>Final Total</span>
+              <strong id="guestTotal">$0.00</strong>
+            </div>
           </div>
           <button id="confirmTotalButton" class="primary-button guest-confirm-button" type="button">Confirm Total</button>
         </section>
@@ -225,10 +204,20 @@
               <strong id="qrTotal">$0.00</strong>
             </div>
             <div class="summary-row">
-              <span>Note Icons</span>
+              <span>Note</span>
               <strong id="qrNotePreview">🍺🍸</strong>
             </div>
           </div>
+          <section class="checkout-section qr-note-section">
+            <h4>Note</h4>
+            <div id="guestNotePicker" class="emoji-picker"></div>
+            <div class="summary-stack">
+              <div class="summary-row">
+                <span>Selected Note</span>
+                <strong id="qrNoteEditorPreview">🍺🍸</strong>
+              </div>
+            </div>
+          </section>
           <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
           <p class="qr-help">Scan this QR code and confirm payment in Venmo.</p>
           <p class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>

@@ -69,7 +69,7 @@ const elements = {
   guestCartList: document.getElementById("guestCartList"),
   guestSubtotal: document.getElementById("guestSubtotal"),
   guestSummarySubtotal: document.getElementById("guestSummarySubtotal"),
-  guestNotePreview: document.getElementById("guestNotePreview"),
+  qrNoteEditorPreview: document.getElementById("qrNoteEditorPreview"),
   guestNotePicker: document.getElementById("guestNotePicker"),
   tipOptions: document.getElementById("tipOptions"),
   customTipLabel: document.getElementById("customTipLabel"),
@@ -233,14 +233,13 @@ function renderHostCart() {
         <button class="stepper-button" type="button" aria-label="Decrease ${escapeHtml(item.name)}">-</button>
         <span class="quantity-badge">${item.quantity}</span>
         <button class="stepper-button" type="button" aria-label="Increase ${escapeHtml(item.name)}">+</button>
-        <button class="remove-button" type="button" aria-label="Remove ${escapeHtml(item.name)}">Remove</button>
       </div>
     `;
 
-    const [decreaseButton, increaseButton, removeButton] = row.querySelectorAll("button");
+    const [decreaseButton, increaseButton] = row.querySelectorAll("button");
     decreaseButton.addEventListener("click", () => updateCartItemQuantity(item.id, item.quantity - 1));
     increaseButton.addEventListener("click", () => updateCartItemQuantity(item.id, item.quantity + 1));
-    removeButton.addEventListener("click", () => removeCartItem(item.id));
+    bindSwipeToRemove(row, item);
 
     elements.hostCartList.appendChild(row);
   });
@@ -270,13 +269,17 @@ function renderGuestCart() {
 
 function renderTipOptions() {
   elements.tipOptions.innerHTML = "";
+  const subtotal = getSubtotal();
 
   TIP_OPTIONS.forEach((option) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `tip-button ${appState.tipSelection === option.id ? "selected" : ""}`;
     button.dataset.tipId = option.id;
-    button.innerHTML = `<strong>${option.label}</strong>`;
+    const tipAmount = option.type === "percent"
+      ? formatCurrency(roundMoney(subtotal * option.value))
+      : "Enter amount";
+    button.innerHTML = `<strong>${option.label}</strong><span>${tipAmount}</span>`;
     elements.tipOptions.appendChild(button);
   });
 
@@ -434,19 +437,37 @@ function clearPresetDragState() {
   });
 }
 
+function setElementText(element, value) {
+  if (element) {
+    element.textContent = value;
+  }
+}
+
+function setElementValue(element, value) {
+  if (element) {
+    element.value = value;
+  }
+}
+
+function setElementHref(element, value) {
+  if (element) {
+    element.href = value;
+  }
+}
+
 function updateSummary() {
   const { subtotal, tip, total, note, venmoUrl } = getOrderSummary();
 
-  elements.hostSubtotal.textContent = formatCurrency(subtotal);
-  elements.guestSubtotal.textContent = formatCurrency(subtotal);
-  elements.guestSummarySubtotal.textContent = formatCurrency(subtotal);
-  elements.guestTip.textContent = formatCurrency(tip);
-  elements.guestTotal.textContent = formatCurrency(total);
-  elements.guestNotePreview.textContent = note || "No icons selected";
-  elements.qrTotal.textContent = formatCurrency(total);
-  elements.qrNotePreview.textContent = note || "No icons selected";
-  elements.venmoUrlOutput.value = venmoUrl;
-  elements.openVenmoButton.href = venmoUrl;
+  setElementText(elements.hostSubtotal, formatCurrency(subtotal));
+  setElementText(elements.guestSubtotal, formatCurrency(subtotal));
+  setElementText(elements.guestSummarySubtotal, formatCurrency(subtotal));
+  setElementText(elements.guestTip, formatCurrency(tip));
+  setElementText(elements.guestTotal, formatCurrency(total));
+  setElementText(elements.qrNoteEditorPreview, note || "No icons selected");
+  setElementText(elements.qrTotal, formatCurrency(total));
+  setElementText(elements.qrNotePreview, note || "No icons selected");
+  setElementValue(elements.venmoUrlOutput, venmoUrl);
+  setElementHref(elements.openVenmoButton, venmoUrl);
   elements.handToGuestButton.disabled = subtotal <= 0;
   elements.confirmTotalButton.disabled = subtotal <= 0 || (appState.tipSelection === "custom" && appState.customTipAmount < 0);
   elements.markPaidButton.disabled = total <= 0;
@@ -579,6 +600,30 @@ function removeCartItem(id) {
   appState.cart = appState.cart.filter((item) => item.id !== id);
   persistCart();
   renderAll();
+}
+
+function bindSwipeToRemove(row, item) {
+  let startX = 0;
+  let tracking = false;
+
+  row.addEventListener("touchstart", (event) => {
+    if (event.touches.length !== 1) {
+      return;
+    }
+    startX = event.touches[0].clientX;
+    tracking = true;
+  }, { passive: true });
+
+  row.addEventListener("touchend", (event) => {
+    if (!tracking || !event.changedTouches.length) {
+      return;
+    }
+    const deltaX = event.changedTouches[0].clientX - startX;
+    tracking = false;
+    if (deltaX < -72 && window.confirm(`Remove ${item.name}?`)) {
+      removeCartItem(item.id);
+    }
+  });
 }
 
 function handleItemModalSubmit(event) {
