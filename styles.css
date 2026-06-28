@@ -133,6 +133,15 @@ main.main-host-mode {
   overflow: hidden;
 }
 
+.screen-guest {
+  align-self: stretch;
+  align-content: stretch;
+  justify-self: stretch;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
 .payment-stage {
   display: flex;
   justify-content: center;
@@ -777,7 +786,7 @@ textarea {
 .qr-code {
   display: flex;
   justify-content: center;
-  padding: 18px 0 10px;
+  padding: 8px 0 10px;
 }
 
 .qr-code img,
@@ -807,7 +816,7 @@ textarea {
   display: block;
   width: min(100%, 216px);
   max-height: 88px;
-  margin: 0 auto 24px;
+  margin: 0 auto 14px;
   object-fit: contain;
   background: transparent;
   padding: 0;
@@ -959,10 +968,12 @@ textarea {
 
 .guest-checkout-panel {
   display: grid;
-  gap: 14px;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 12px;
   padding-top: 6px;
+  height: 100%;
   max-height: 100%;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .checkout-section {
@@ -986,6 +997,17 @@ textarea {
 .guest-items-stack:first-of-type {
   padding-top: 0;
   border-top: 0;
+}
+
+.guest-items-stack {
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.guest-cart-list {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .guest-subtotal-row {
@@ -1033,7 +1055,7 @@ textarea {
 .single-row-tip-grid .tip-button {
   min-width: 112px;
   flex: 1 0 112px;
-  min-height: 78px;
+  min-height: 72px;
   text-align: center;
 }
 
@@ -1063,7 +1085,7 @@ textarea {
   display: grid;
   gap: 12px;
   align-items: stretch;
-  padding-top: 14px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
