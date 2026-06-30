@@ -240,16 +240,23 @@
               </div>
             </div>
           </section>
-          <img id="venmoQrLogo" class="zelle-qr-logo hidden" src="venmo_logo.svg" alt="Venmo">
-          <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
-          <div id="zelleQrWrap" class="qr-static hidden">
-            <img class="zelle-qr-logo" src="zelle_logo.svg" alt="Zelle">
-            <img class="zelle-qr-code" src="zelle_qr.png" alt="Zelle QR code for Christopher Lequang">
+          <div class="qr-layout">
+            <section class="qr-card qr-payment-card">
+              <img id="venmoQrLogo" class="zelle-qr-logo hidden" src="venmo_logo.svg" alt="Venmo">
+              <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
+              <div id="zelleQrWrap" class="qr-static hidden">
+                <img class="zelle-qr-logo" src="zelle_logo.svg" alt="Zelle">
+                <img class="zelle-qr-code" src="zelle_qr.png" alt="Zelle QR code for Christopher Lequang">
+              </div>
+              <div id="zelleAmountDisplay" class="zelle-amount-display hidden">$0.00</div>
+            </section>
+
+            <section class="qr-card qr-instruction-card">
+              <p id="qrHelpPrimary" class="qr-help qr-help-primary">Scan this QR code and confirm payment in Venmo.</p>
+              <p id="qrHelpSecondary" class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
+              <p id="qrHelpTertiary" class="qr-help subtle hidden">Recipient name will show as CHRISTOPHER LEQUANG in Zelle.</p>
+            </section>
           </div>
-          <p id="qrHelpPrimary" class="qr-help qr-help-primary">Scan this QR code and confirm payment in Venmo.</p>
-          <p id="qrHelpSecondary" class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
-          <p id="qrHelpTertiary" class="qr-help subtle hidden">Recipient name will show as CHRISTOPHER LEQUANG in Zelle.</p>
-          <div id="zelleAmountDisplay" class="zelle-amount-display hidden">$0.00</div>
           <label id="venmoUrlField" class="url-field hidden">
             <span>Venmo URL</span>
             <textarea id="venmoUrlOutput" rows="3" readonly></textarea>
