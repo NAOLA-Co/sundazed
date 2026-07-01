@@ -1217,8 +1217,8 @@ textarea {
 
 .guest-subtotal-row {
   /*color:#778899 !important;*/
-  padding-top: 24px;
-  padding-bottom: 24px;
+  padding-top: 12px;
+  padding-bottom: 12px;
   margin-top: 0;
   border-top: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.16);
@@ -1238,7 +1238,7 @@ textarea {
 }
 
 .guest-tip-row {
-  padding-top: 24px;
+  padding-top: 12px;
   padding-bottom: 0px;
   margin-top: 0;
   border-top: 0;
@@ -1319,8 +1319,8 @@ textarea {
 }
 
 .final-total-row {
-  padding-top: 24px;
-  padding-bottom: 24px;
+  padding-top: 12px;
+  padding-bottom: 12px;
   margin-top: 24px;
   align-items: flex-end;
   border-top: 2px solid hsla(215, 38%, 13%, 1);
