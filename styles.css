@@ -1284,7 +1284,7 @@ textarea {
 
 .single-row-tip-grid .tip-button .tip-button-amount {
   margin-top: 4px;
-  font-size: 1.3em;
+  font-size: 1em;
   color: #000000;
 }
 
@@ -1334,7 +1334,7 @@ textarea {
 }
 
 .final-total-row strong {
-  font-size: 2em;
+  font-size: 1.6em;
   line-height: 1;
   letter-spacing: -0.04em;
 }
