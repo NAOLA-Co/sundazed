@@ -379,7 +379,7 @@ legend {
 }
 
 #venmoMethodButton .payment-method-logo {
-  width: 300px;
+  width: 86%;
   height:80px;
   object-fit: cover;
 }
@@ -1334,7 +1334,7 @@ textarea {
 }
 
 .final-total-row strong {
-  font-size: 2.25em;
+  font-size: 2em;
   line-height: 1;
   letter-spacing: -0.04em;
 }
@@ -1412,7 +1412,7 @@ textarea {
 
 .guest-payment-word {
   display: inline-block;
-  opacity: 0;
+  opacity: 0.35;
   transform: translateY(0);
 }
 
@@ -1421,7 +1421,7 @@ textarea {
 }
 
 .guest-payment-word-with {
-  opacity: 0;
+  opacity: 0.35;
   animation: paymentWithReveal 3.6s ease-in-out infinite;
 }
 
@@ -1461,7 +1461,7 @@ textarea {
   0%,
   8%,
   100% {
-    opacity: 0;
+    opacity: 0.35;
   }
 
   12%,
@@ -1471,7 +1471,7 @@ textarea {
 
   84%,
   100% {
-    opacity: 0;
+    opacity: 0.35;
   }
 }
 
@@ -1479,7 +1479,7 @@ textarea {
   0%,
   34%,
   100% {
-    opacity: 0;
+    opacity: 0.35;
   }
 
   40%,
@@ -1489,7 +1489,7 @@ textarea {
 
   84%,
   100% {
-    opacity: 0;
+    opacity: 0.35;
   }
 }
 
