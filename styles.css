@@ -1321,7 +1321,7 @@ textarea {
 .final-total-row {
   padding-top: 12px;
   padding-bottom: 12px;
-  margin-top: 24px;
+  margin-top: 12px;
   align-items: flex-end;
   border-top: 2px solid hsla(215, 38%, 13%, 1);
   border-bottom: 2px solid hsla(215, 38%, 13%, 1);
