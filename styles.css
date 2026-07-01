@@ -17,7 +17,7 @@
   --radius-sm: 12px;
   --shell-pad: 18px;
   --shell-gap: 18px;
-  --toolbar-height: 80px;
+  --toolbar-height: 42px;
   --toolbar-pad-y: 10px;
   --safe-bottom: max(env(safe-area-inset-bottom), 18px);
   font-family: "Avenir Next", "SF Pro Display", "Segoe UI", sans-serif;
