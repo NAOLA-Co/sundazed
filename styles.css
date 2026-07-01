@@ -1227,7 +1227,7 @@ textarea {
 
 .guest-subtotal-row span,
 .guest-subtotal-row strong {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   letter-spacing: 0;
   /*color: white !important;*/
 }
@@ -1247,7 +1247,7 @@ textarea {
 
 .guest-tip-row span,
 .guest-tip-row strong {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   letter-spacing: 0;
 }
 
@@ -1328,13 +1328,13 @@ textarea {
 }
 
 .final-total-row span {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   /*color: var(--text);*/
 }
 
 .final-total-row strong {
-  font-size: clamp(1.8rem, 4.35vw, 2.42rem);
+  font-size: 2.25em;
   line-height: 1;
   letter-spacing: -0.04em;
 }
