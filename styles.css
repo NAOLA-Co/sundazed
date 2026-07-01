@@ -1221,8 +1221,8 @@ textarea {
   padding-bottom: 12px;
   margin-top: 0;
   border-top: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgb(150, 150, 150);
+  border-bottom: 1px solid rgb(150, 150, 150);
 }
 
 .guest-subtotal-row span,
@@ -1276,7 +1276,7 @@ textarea {
 }
 
 .single-row-tip-grid .tip-button .tip-button-label {
-  font-size: 1.9em;
+  font-size: 1.75em;
   line-height: 1.05;
   font-weight: 800;
   color: #000000;
@@ -1426,7 +1426,7 @@ textarea {
 }
 
 .guest-payment-method-card .payment-method-logo {
-  width: min(100%, 180px);
+  width: 58%;
   max-height: 80px;
   object-fit: cover;
   transform: scale(1);
