@@ -61,6 +61,7 @@ const elements = {
   advancedTabButton: document.getElementById("advancedTabButton"),
   presetItems: document.getElementById("presetItems"),
   hostCartList: document.getElementById("hostCartList"),
+  hostCartBody: document.querySelector(".host-cart-body"),
   hostCartEmpty: document.getElementById("hostCartEmpty"),
   hostSubtotal: document.getElementById("hostSubtotal"),
   clearCartButton: document.getElementById("clearCartButton"),
@@ -77,6 +78,7 @@ const elements = {
   handToGuestButton: document.getElementById("handToGuestButton"),
   guestCartList: document.getElementById("guestCartList"),
   guestSubtotal: document.getElementById("guestSubtotal"),
+  guestSubtotalEcho: document.getElementById("guestSubtotalEcho"),
   qrNoteEditorPreview: document.getElementById("qrNoteEditorPreview"),
   guestNotePicker: document.getElementById("guestNotePicker"),
   tipOptions: document.getElementById("tipOptions"),
@@ -95,6 +97,7 @@ const elements = {
   venmoQrLogo: document.getElementById("venmoQrLogo"),
   zelleQrWrap: document.getElementById("zelleQrWrap"),
   qrHelpPrimary: document.getElementById("qrHelpPrimary"),
+  venmoScanSteps: document.getElementById("venmoScanSteps"),
   qrHelpSecondary: document.getElementById("qrHelpSecondary"),
   qrHelpTertiary: document.getElementById("qrHelpTertiary"),
   zelleAmountDisplay: document.getElementById("zelleAmountDisplay"),
@@ -149,7 +152,9 @@ function bindEvents() {
   elements.closeTipModalButton.addEventListener("click", closeTipModal);
   elements.tipModal.addEventListener("click", handleModalBackdropClick);
   elements.stepBackButton.addEventListener("click", goBackOneStep);
-  elements.confirmTotalButton.addEventListener("click", goToPaymentScreen);
+  if (elements.confirmTotalButton) {
+    elements.confirmTotalButton.addEventListener("click", goToPaymentScreen);
+  }
   elements.venmoMethodButton.addEventListener("click", () => choosePaymentMethod("venmo"));
   elements.zelleMethodButton.addEventListener("click", () => choosePaymentMethod("zelle"));
   elements.clearCartButton.addEventListener("click", clearCart);
@@ -293,8 +298,8 @@ function renderGuestCart() {
     row.innerHTML = `
       <div class="cart-name-cell">
         <strong>${escapeHtml(item.name)}</strong>
+        <span class="cart-inline-detail">@${formatCurrency(item.price)} X ${item.quantity}</span>
       </div>
-      <div class="cart-detail-cell">${item.quantity} × ${formatCurrency(item.price)}</div>
       <strong class="cart-total-value">${formatCurrency(item.price * item.quantity)}</strong>
     `;
     elements.guestCartList.appendChild(row);
@@ -313,7 +318,13 @@ function renderTipOptions() {
     const tipAmount = option.type === "percent"
       ? formatCurrency(roundMoney(subtotal * option.value))
       : appState.customTipAmount > 0 ? formatCurrency(appState.customTipAmount) : "Enter amount";
-    button.innerHTML = `<strong>${option.label}</strong><span>${tipAmount}</span>`;
+    const amountClass = option.type === "custom" && appState.customTipAmount <= 0
+      ? "tip-button-amount tip-button-amount-placeholder"
+      : "tip-button-amount";
+    button.innerHTML = `
+      <div class="tip-button-label">${option.label}</div>
+      <div class="${amountClass}">${tipAmount}</div>
+    `;
     elements.tipOptions.appendChild(button);
   });
 }
@@ -489,6 +500,7 @@ function updateSummary() {
 
   setElementText(elements.hostSubtotal, formatCurrency(subtotal));
   setElementText(elements.guestSubtotal, formatCurrency(subtotal));
+  setElementText(elements.guestSubtotalEcho, formatCurrency(subtotal));
   setElementText(elements.guestTip, formatCurrency(tip));
   setElementText(elements.guestTotal, formatCurrency(total));
   setElementText(elements.qrNoteEditorPreview, note || "No icons selected");
@@ -499,7 +511,11 @@ function updateSummary() {
   setElementValue(elements.venmoUrlOutput, venmoUrl);
   setElementHref(elements.openVenmoButton, venmoUrl);
   elements.handToGuestButton.disabled = subtotal <= 0;
-  elements.confirmTotalButton.disabled = subtotal <= 0 || (appState.tipSelection === "custom" && appState.customTipAmount < 0);
+  if (elements.confirmTotalButton) {
+    elements.confirmTotalButton.disabled = subtotal <= 0 || (appState.tipSelection === "custom" && appState.customTipAmount < 0);
+  }
+  elements.venmoMethodButton.disabled = subtotal <= 0 || (appState.tipSelection === "custom" && appState.customTipAmount < 0);
+  elements.zelleMethodButton.disabled = subtotal <= 0 || (appState.tipSelection === "custom" && appState.customTipAmount < 0);
   elements.markPaidButton.disabled = total <= 0;
 
   if (appState.screen === "qr") {
@@ -594,6 +610,7 @@ function setReportDateToToday() {
 
 function updateScreen() {
   elements.mainContent.classList.toggle("main-host-mode", appState.screen === "host");
+  elements.mainContent.classList.toggle("main-guest-mode", appState.screen === "guest");
   elements.hostScreen.classList.toggle("hidden", appState.screen !== "host");
   elements.guestScreen.classList.toggle("hidden", appState.screen !== "guest");
   elements.paymentScreen.classList.toggle("hidden", appState.screen !== "payment");
@@ -637,6 +654,7 @@ function addItemToCart(name, price) {
   }
   persistCart();
   renderAll();
+  scrollHostCartToBottom();
 }
 
 function updateCartItemQuantity(id, nextQuantity) {
@@ -653,6 +671,7 @@ function updateCartItemQuantity(id, nextQuantity) {
   item.quantity = nextQuantity;
   persistCart();
   renderAll();
+  scrollHostCartToBottom();
 }
 
 function removeCartItem(id) {
@@ -675,6 +694,16 @@ function clearCart() {
   appState.customTipAmount = 0;
   persistCart();
   renderAll();
+}
+
+function scrollHostCartToBottom() {
+  if (!elements.hostCartBody) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    elements.hostCartBody.scrollTop = elements.hostCartBody.scrollHeight;
+  });
 }
 
 function bindSwipeToRemove(row, item) {
@@ -934,13 +963,23 @@ function goToPaymentScreen() {
 }
 
 function choosePaymentMethod(method) {
+  if (getSubtotal() <= 0) {
+    showMessage("This reimbursement is empty.");
+    return;
+  }
+
+  if (appState.tipSelection === "custom" && appState.customTipAmount < 0) {
+    showMessage("Custom tip cannot be below zero.");
+    return;
+  }
+
   appState.paymentMethod = method;
   switchScreen("qr");
 }
 
 function goBackOneStep() {
   if (appState.screen === "qr") {
-    switchScreen("payment");
+    switchScreen("guest");
     return;
   }
 
@@ -1109,10 +1148,11 @@ function renderPaymentQr() {
   elements.venmoUrlField.classList.toggle("hidden", true);
   elements.openVenmoButton.classList.toggle("hidden", true);
   elements.qrHelpTertiary.classList.toggle("hidden", isVenmo);
+  elements.venmoScanSteps.classList.toggle("hidden", !isVenmo);
 
   if (isVenmo) {
-    setElementText(elements.qrHelpPrimary, "Use your phone camera to scan this QR code, then confirm payment in Venmo.");
-    setElementText(elements.qrHelpSecondary, "");
+    elements.qrHelpPrimary.innerHTML = 'Use your <span class="qr-help-accent">camera app</span> to scan the QR code.';
+    setElementText(elements.qrHelpSecondary, "The Camera app will open a Venmo link for you.");
     setElementText(elements.qrHelpTertiary, "");
     renderQrCode(venmoUrl);
     return;

@@ -171,46 +171,65 @@
       </section>
 
       <section id="guestScreen" class="screen screen-guest hidden">
-        <section class="panel guest-checkout-panel">
-          <section class="checkout-section guest-items-stack">
-            <h4>Items</h4>
-            <div id="guestCartList" class="cart-list guest-cart-list"></div>
-            <div class="summary-row guest-subtotal-row">
-              <span>Subtotal</span>
-              <strong id="guestSubtotal">$0.00</strong>
+        <div id="guestComposerView" class="host-stack">
+          <section class="panel guest-items-panel">
+            <div class="panel-heading">
+              <h3>Items</h3>
+            </div>
+            <div class="guest-items-body">
+              <div id="guestCartList" class="cart-list guest-cart-list"></div>
+            </div>
+            <div class="guest-items-footer">
+              <div class="summary-row guest-subtotal-row">
+                <span style="color:#778899 !important;">Subtotal</span>
+                <strong id="guestSubtotal" style="color:#778899 !important;">$0.00</strong>
+              </div>
             </div>
           </section>
 
-          <section class="checkout-section guest-tip-section">
-            <div class="summary-row guest-tip-row">
-              <span>Tip</span>
-              <strong id="guestTip">$0.00</strong>
-            </div>
-            <div id="tipOptions" class="tip-grid single-row-tip-grid"></div>
-          </section>
-
-          <div class="guest-total-actions">
-            <div class="summary-stack total-stack guest-total-stack">
-              <div class="checkout-total-card final-total-card">
+          <section class="panel guest-summary-panel">
+            <div class="guest-summary-top">
+              <div class="summary-row guest-subtotal-row guest-summary-subtotal-row">
+                <span>Subtotal</span>
+                <strong id="guestSubtotalEcho">$0.00</strong>
+              </div>
+              <div class="guest-summary-body">
+                <div id="tipOptions" class="tip-grid single-row-tip-grid"></div>
+              </div>
+              <div class="summary-row guest-tip-row">
+                <span>Tip</span>
+                <strong id="guestTip">$0.00</strong>
+              </div>
+              <div class="summary-row final-total-row">
                 <span>Final Total</span>
                 <strong id="guestTotal">$0.00</strong>
               </div>
             </div>
-            <button id="confirmTotalButton" class="primary-button guest-confirm-button" type="button">Confirm Total</button>
-          </div>
-        </section>
+            <div class="guest-summary-footer">
+              <div class="guest-payment-method-grid">
+                <button id="venmoMethodButton" class="payment-method-card guest-payment-method-card" type="button" data-payment-method="venmo">
+                  <span class="guest-payment-label" aria-hidden="true">
+                    <span class="guest-payment-word guest-payment-word-pay">Pay</span>
+                    <span class="guest-payment-word guest-payment-word-with">with</span>
+                  </span>
+                  <img class="payment-method-logo" src="venmo_logo.svg" alt="Venmo">
+                </button>
+                <button id="zelleMethodButton" class="payment-method-card guest-payment-method-card" type="button" data-payment-method="zelle">
+                  <span class="guest-payment-label" aria-hidden="true">
+                    <span class="guest-payment-word guest-payment-word-pay">Pay</span>
+                    <span class="guest-payment-word guest-payment-word-with">with</span>
+                  </span>
+                  <img class="payment-method-logo" src="zelle_logo.svg" alt="Zelle">
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
       </section>
 
       <section id="paymentScreen" class="payment-stage hidden">
         <div class="payment-stage-inner">
-          <div class="payment-method-grid">
-            <button id="venmoMethodButton" class="payment-method-card" type="button" data-payment-method="venmo">
-              <img class="payment-method-logo" src="venmo_logo.svg" alt="Venmo">
-            </button>
-            <button id="zelleMethodButton" class="payment-method-card" type="button" data-payment-method="zelle">
-              <img class="payment-method-logo" src="zelle_logo.svg" alt="Zelle">
-            </button>
-          </div>
+          <div class="payment-method-grid"></div>
         </div>
       </section>
 
@@ -253,6 +272,22 @@
 
             <section class="qr-card qr-instruction-card">
               <p id="qrHelpPrimary" class="qr-help qr-help-primary">Scan this QR code and confirm payment in Venmo.</p>
+              <div id="venmoScanSteps" class="scan-steps hidden" aria-label="How to scan with your phone camera">
+                <div class="scan-step">
+                  <div class="scan-step-icon" aria-hidden="true">📷</div>
+                  <div class="scan-step-label">Open Camera</div>
+                </div>
+                <div class="scan-step-arrow" aria-hidden="true">→</div>
+                <div class="scan-step">
+                  <div class="scan-step-icon" aria-hidden="true">🔗</div>
+                  <div class="scan-step-label">Tap Link</div>
+                </div>
+                <div class="scan-step-arrow" aria-hidden="true">→</div>
+                <div class="scan-step">
+                  <div class="scan-step-icon" aria-hidden="true">💸</div>
+                  <div class="scan-step-label">Pay in Venmo</div>
+                </div>
+              </div>
               <p id="qrHelpSecondary" class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
               <p id="qrHelpTertiary" class="qr-help subtle hidden">Recipient name will show as CHRISTOPHER LEQUANG in Zelle.</p>
             </section>
