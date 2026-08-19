@@ -267,7 +267,7 @@ legend {
 }
 
 .preset-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .host-quick-add-panel {
@@ -336,6 +336,25 @@ legend {
   margin-top: 6px;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.host-quick-add-panel .preset-button {
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.host-quick-add-panel .preset-button strong {
+  font-size: 1.08rem;
+}
+
+.host-quick-add-panel .preset-button span {
+  margin-top: 0;
 }
 
 .payment-panel {
@@ -1155,7 +1174,6 @@ textarea {
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background-color: rgb(255 255 255 / 9%);
 }
 
 .guest-items-panel {
@@ -1164,8 +1182,7 @@ textarea {
 
 .guest-summary-panel {
   grid-template-rows: minmax(0, 1fr) auto;
-  background-color: hsla(0, 0%, 100%, 0.85);
-  color:#141e2c;
+  border: 1px solid rgba(255, 203, 107, 0.28);
 }
 
 .guest-summary-top {
@@ -1196,7 +1213,7 @@ textarea {
   margin-top: 0;
 }
 .guest-items-footer{
-  color: #778899;
+  color: var(--muted);
 }
 
 
@@ -1216,25 +1233,23 @@ textarea {
 }
 
 .guest-subtotal-row {
-  /*color:#778899 !important;*/
   padding-top: 12px;
   padding-bottom: 12px;
   margin-top: 0;
-  border-top: 0;
-  border-top: 1px solid rgb(150, 150, 150);
-  border-bottom: 1px solid rgb(150, 150, 150);
+  border-top: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
 }
 
 .guest-subtotal-row span,
 .guest-subtotal-row strong {
   font-size: 1.25rem;
   letter-spacing: 0;
-  /*color: white !important;*/
+  color: var(--text);
 }
 
 .guest-subtotal-row span {
   font-weight: 700;
-  /*color: #778899;*/
+  color: var(--muted);
 }
 
 .guest-tip-row {
@@ -1249,47 +1264,44 @@ textarea {
 .guest-tip-row strong {
   font-size: 1.25rem;
   letter-spacing: 0;
+  color: var(--text);
 }
 
 .guest-tip-row span {
   font-weight: 700;
-  /*color: var(--text);*/
+  color: var(--muted);
 }
 
 .single-row-tip-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
 }
 
 .single-row-tip-grid .tip-button {
   min-width: 0;
-  flex: 1 1 0;
-  aspect-ratio: 1 / 1;
-  min-height: 0;
-  padding-bottom: 12px;
+  min-height: 72px;
+  padding: 10px;
   text-align: center;
-  background-color: #bbbbbb;
-  opacity: 0.8;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .single-row-tip-grid .tip-button .tip-button-label {
-  font-size: 1.75em;
-  line-height: 1.05;
+  font-size: clamp(0.95rem, 2.6vw, 1.4rem);
+  line-height: 1.1;
   font-weight: 800;
-  color: #000000;
+  color: var(--text);
 }
 
 .single-row-tip-grid .tip-button .tip-button-amount {
   margin-top: 4px;
-  font-size: 1em;
-  color: #000000;
+  font-size: 0.85em;
+  color: var(--muted);
 }
 
 .single-row-tip-grid .tip-button .tip-button-amount-placeholder {
-  font-size: 1.1em;
+  font-size: 0.95em;
 }
 
 .single-row-tip-grid .tip-button .tip-button-amount:not(:empty) {
@@ -1300,16 +1312,21 @@ textarea {
   word-break: break-word;
 }
 
-.single-row-tip-grid .tip-button:hover .tip-button-amount,
-.single-row-tip-grid .tip-button:focus-visible .tip-button-amount,
-.single-row-tip-grid .tip-button.selected .tip-button-amount {
-  color: #000000;
+.single-row-tip-grid .tip-button:hover,
+.single-row-tip-grid .tip-button:focus-visible {
+  background: linear-gradient(180deg, rgba(255, 203, 107, 0.2), rgba(255, 203, 107, 0.08));
+  border-color: rgba(255, 203, 107, 0.5);
 }
 
-.tip-button:hover,
-.tip-button:focus-visible,
-.tip-button.selected {
-  opacity: 1;
+.single-row-tip-grid .tip-button.selected {
+  background: linear-gradient(135deg, #ffcb6b, #ff9f5a);
+  border-color: rgba(255, 203, 107, 0.9);
+  box-shadow: 0 8px 20px rgba(255, 176, 59, 0.35);
+}
+
+.single-row-tip-grid .tip-button.selected .tip-button-label,
+.single-row-tip-grid .tip-button.selected .tip-button-amount {
+  color: #201a08;
 }
 
 .guest-total-actions {
@@ -1323,20 +1340,21 @@ textarea {
   padding-bottom: 12px;
   margin-top: 12px;
   align-items: flex-end;
-  border-top: 2px solid hsla(215, 38%, 13%, 1);
-  border-bottom: 2px solid hsla(215, 38%, 13%, 1);
+  border-top: 2px solid rgba(255, 203, 107, 0.4);
+  border-bottom: 2px solid rgba(255, 203, 107, 0.4);
 }
 
 .final-total-row span {
   font-size: 1.25rem;
   font-weight: 700;
-  /*color: var(--text);*/
+  color: var(--text);
 }
 
 .final-total-row strong {
   font-size: 1.6em;
   line-height: 1;
   letter-spacing: -0.04em;
+  color: var(--guest-accent);
 }
 
 .action-row {
@@ -1368,15 +1386,20 @@ textarea {
   gap: 4px;
   min-height: 108px;
   padding: 24px;
+  border-radius: var(--radius-lg);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
   overflow: hidden;
-  background: linear-gradient(180deg, #ffffff 0%, #f3f6fb 100%);
-  border: 1px solid rgba(15, 20, 29, 0.08);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.92) inset,
-    0 -1px 0 rgba(15, 20, 29, 0.04) inset,
-    0 8px 18px rgba(0, 0, 0, 0.16),
-    0 2px 4px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow);
+}
+
+#venmoMethodButton.guest-payment-method-card {
+  border-color: rgba(61, 149, 236, 0.35);
+}
+
+#zelleMethodButton.guest-payment-method-card {
+  border-color: rgba(108, 30, 191, 0.35);
 }
 
 .guest-payment-method-card:nth-child(2),
@@ -1387,13 +1410,17 @@ textarea {
 .guest-payment-method-card:hover,
 .guest-payment-method-card:focus-visible {
   transform: translateY(-2px) scale(1.01);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.92) inset,
-    0 -1px 0 rgba(15, 20, 29, 0.05) inset,
-    0 14px 28px rgba(0, 0, 0, 0.2),
-    0 4px 8px rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.12);
-  background: linear-gradient(180deg, #ffffff 0%, #f6f8fc 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+}
+
+#venmoMethodButton.guest-payment-method-card:hover,
+#venmoMethodButton.guest-payment-method-card:focus-visible {
+  border-color: rgba(61, 149, 236, 0.6);
+}
+
+#zelleMethodButton.guest-payment-method-card:hover,
+#zelleMethodButton.guest-payment-method-card:focus-visible {
+  border-color: rgba(108, 30, 191, 0.6);
 }
 
 .guest-payment-label {
@@ -1407,7 +1434,7 @@ textarea {
   line-height: 1;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #111111;
+  color: var(--muted);
 }
 
 .guest-payment-word {
@@ -1567,6 +1594,25 @@ textarea {
 
 .tip-modal-card {
   width: min(100%, 360px);
+}
+
+.confirm-modal-card {
+  width: min(100%, 360px);
+}
+
+.confirm-modal-heading {
+  margin-bottom: 18px;
+}
+
+.confirm-modal-heading h3 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+
+.confirm-modal-heading p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
 }
 
 .tip-modal-display-wrap {

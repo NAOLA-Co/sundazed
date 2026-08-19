@@ -127,7 +127,12 @@ const elements = {
   tipModalDisplay: document.getElementById("tipModalDisplay"),
   tipNumpad: document.getElementById("tipNumpad"),
   applyTipButton: document.getElementById("applyTipButton"),
-  closeTipModalButton: document.getElementById("closeTipModalButton")
+  closeTipModalButton: document.getElementById("closeTipModalButton"),
+  confirmModal: document.getElementById("confirmModal"),
+  confirmModalTitle: document.getElementById("confirmModalTitle"),
+  confirmModalMessage: document.getElementById("confirmModalMessage"),
+  confirmModalConfirmButton: document.getElementById("confirmModalConfirmButton"),
+  confirmModalCancelButton: document.getElementById("confirmModalCancelButton")
 };
 
 function init() {
@@ -151,6 +156,9 @@ function bindEvents() {
   elements.applyTipButton.addEventListener("click", applyCustomTipFromModal);
   elements.closeTipModalButton.addEventListener("click", closeTipModal);
   elements.tipModal.addEventListener("click", handleModalBackdropClick);
+  elements.confirmModal.addEventListener("click", handleModalBackdropClick);
+  elements.confirmModalCancelButton.addEventListener("click", () => resolveConfirmModal(false));
+  elements.confirmModalConfirmButton.addEventListener("click", () => resolveConfirmModal(true));
   elements.stepBackButton.addEventListener("click", goBackOneStep);
   if (elements.confirmTotalButton) {
     elements.confirmTotalButton.addEventListener("click", goToPaymentScreen);
@@ -680,12 +688,12 @@ function removeCartItem(id) {
   renderAll();
 }
 
-function clearCart() {
+async function clearCart() {
   if (!appState.cart.length) {
     return;
   }
 
-  if (!window.confirm("Clear the cart?")) {
+  if (!(await confirmAction("Clear the cart?"))) {
     return;
   }
 
@@ -718,13 +726,13 @@ function bindSwipeToRemove(row, item) {
     tracking = true;
   }, { passive: true });
 
-  row.addEventListener("touchend", (event) => {
+  row.addEventListener("touchend", async (event) => {
     if (!tracking || !event.changedTouches.length) {
       return;
     }
     const deltaX = event.changedTouches[0].clientX - startX;
     tracking = false;
-    if (deltaX < -72 && window.confirm(`Remove ${item.name}?`)) {
+    if (deltaX < -72 && (await confirmAction(`Remove ${item.name}?`))) {
       removeCartItem(item.id);
     }
   });
@@ -800,6 +808,27 @@ function handleModalBackdropClick(event) {
     closeItemModal();
   } else if (event.target === elements.tipModal) {
     closeTipModal();
+  } else if (event.target === elements.confirmModal) {
+    resolveConfirmModal(false);
+  }
+}
+
+let confirmModalResolver = null;
+
+function confirmAction(message, title) {
+  elements.confirmModalTitle.textContent = title || "Are you sure?";
+  elements.confirmModalMessage.textContent = message;
+  elements.confirmModal.classList.remove("hidden");
+  return new Promise((resolve) => {
+    confirmModalResolver = resolve;
+  });
+}
+
+function resolveConfirmModal(result) {
+  elements.confirmModal.classList.add("hidden");
+  if (confirmModalResolver) {
+    confirmModalResolver(result);
+    confirmModalResolver = null;
   }
 }
 
@@ -1231,7 +1260,7 @@ function saveReport() {
 
 async function clearReport() {
   const label = formatReportDay(appState.reportFilterDate);
-  if (!window.confirm(`Delete all sales for ${label}?`)) {
+  if (!(await confirmAction(`Delete all sales for ${label}?`))) {
     return;
   }
 
