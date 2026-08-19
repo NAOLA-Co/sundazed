@@ -1049,10 +1049,13 @@ async function markOrderPaid() {
   appState.report.orders.push(order);
 
   saveReport();
-  await sendSaleToCloud(order);
+  const cloudSynced = await sendSaleToCloud(order);
   await refreshReportData({ silent: true });
   resetOrder(false);
-  showMessage("Sale added to the sales report.", true);
+
+  if (cloudSynced || !hasCloudConfig()) {
+    showMessage("Sale added to the sales report.", true);
+  }
 }
 
 function resetOrder(showSuccessMessage = true) {
