@@ -279,10 +279,17 @@ legend {
 }
 
 .host-quick-add-panel .preset-grid {
+  display: flex;
+  flex-wrap: wrap;
   min-height: 0;
   align-content: start;
+  align-items: flex-start;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+.host-quick-add-panel .preset-grid .preset-button {
+  flex: 0 0 calc((100% - 20px) / 3);
 }
 
 .tip-grid {
@@ -339,8 +346,10 @@ legend {
 }
 
 .host-quick-add-panel .preset-button {
+  position: relative;
   aspect-ratio: 1 / 1;
   min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -350,11 +359,128 @@ legend {
 }
 
 .host-quick-add-panel .preset-button strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: 1.08rem;
 }
 
 .host-quick-add-panel .preset-button span {
   margin-top: 0;
+}
+
+@keyframes presetJiggle {
+  0%, 100% { transform: rotate(-1.4deg); }
+  50% { transform: rotate(1.4deg); }
+}
+
+.preset-grid.reorder-mode .preset-button {
+  animation-name: presetJiggle;
+  animation-duration: 0.22s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-delay: calc(var(--jiggle-delay, 0) * 1ms);
+  touch-action: none;
+  user-select: none;
+}
+
+.preset-grid.reorder-mode .preset-button:nth-child(even) {
+  animation-duration: 0.26s;
+}
+
+.preset-grid.reorder-mode .preset-button.dragging {
+  animation: none;
+  z-index: 20;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+  transform: scale(1.08) !important;
+  opacity: 0.96;
+}
+
+.preset-button .preset-variant-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.preset-variant-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(136, 181, 255, 0.85);
+}
+
+.variant-grid .preset-button {
+  text-align: left;
+}
+
+.variant-rows-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.variant-rows-hint {
+  margin: 4px 0 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.variant-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.variant-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.variant-row input {
+  padding: 10px 12px;
+}
+
+.variant-row-price-field {
+  position: relative;
+}
+
+.variant-row-price-prefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.variant-row-price-field .variant-row-price {
+  width: 100%;
+  padding-left: 20px;
+}
+
+.variant-row-remove {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 124, 133, 0.14);
+  color: var(--danger);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.add-variant-row-button {
+  margin-top: 10px;
+  width: 100%;
 }
 
 .payment-panel {
@@ -492,6 +618,7 @@ fieldset {
 }
 
 input,
+select,
 textarea {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -504,6 +631,19 @@ textarea {
 
 textarea {
   resize: vertical;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9' fill='none'%3E%3Cpath d='M1 1L7 7L13 1' stroke='%23a5b0c3' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 38px;
+  cursor: pointer;
+}
+
+select option {
+  background: var(--input);
+  color: var(--text);
 }
 
 .primary-button,
@@ -855,10 +995,7 @@ textarea {
 }
 
 .qr-card {
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 20px;
+  padding: 0;
 }
 
 .qr-payment-card {
@@ -867,6 +1004,33 @@ textarea {
   align-items: center;
   justify-content: center;
   text-align: center;
+  gap: 14px;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 18px 24px 26px;
+  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.35);
+}
+
+.qr-amount-block {
+  display: grid;
+  gap: 4px;
+}
+
+.qr-amount-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(11, 14, 19, 0.45);
+}
+
+.qr-scan-frame {
+  display: flex;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(11, 14, 19, 0.1);
+  background: #ffffff;
 }
 
 .qr-instruction-card {
@@ -878,37 +1042,30 @@ textarea {
 .qr-code {
   display: flex;
   justify-content: center;
-  padding: 8px 0 10px;
 }
 
 .qr-code img,
 .qr-code canvas {
-  border-radius: 24px;
-  background: white;
-  padding: 12px;
-  width: 375px;
-  height: 375px;
+  width: 260px;
+  height: 260px;
   max-width: 100%;
   object-fit: contain;
 }
 
 .zelle-qr-code {
   display: block;
-  width: 375px;
-  height: 375px;
+  width: 260px;
+  height: 260px;
   margin: 0 auto;
-  padding: 12px;
-  border-radius: 24px;
-  background: white;
   object-fit: contain;
   max-width: 100%;
 }
 
 .zelle-qr-logo {
   display: block;
-  width: min(100%, 216px);
-  max-height: 88px;
-  margin: 0 auto 0;
+  width: min(100%, 210px);
+  max-height: 68px;
+  margin: 0 auto;
   object-fit: contain;
   background: transparent;
   padding: 0;
@@ -916,8 +1073,8 @@ textarea {
 }
 
 #venmoQrLogo {
-  width: min(100%, 216px);
-  max-height: 88px;
+  width: min(100%, 210px);
+  max-height: 68px;
 }
 
 .qr-static {
@@ -929,9 +1086,9 @@ textarea {
 }
 
 .qr-help-primary {
-  font-size: clamp(1.12rem, 4.2vw, 11.34rem);
+  font-size: clamp(1.4rem, 5.4vw, 2rem);
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text);
 }
@@ -939,6 +1096,29 @@ textarea {
 .qr-help-accent {
   color: var(--qr-accent);
   font-weight: 800;
+}
+
+.qr-note-section {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.qr-note-input {
+  width: 260px;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(11, 14, 19, 0.15);
+  background: rgba(11, 14, 19, 0.04);
+  color: #0b0e13;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.qr-note-input::placeholder {
+  color: rgba(11, 14, 19, 0.4);
 }
 
 .scan-steps {
@@ -1030,11 +1210,10 @@ textarea {
 }
 
 .zelle-amount-display {
-  margin-top: 12px;
   font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.04em;
-  color: var(--text);
+  color: #0b0e13;
 }
 
 .url-field {
@@ -1063,8 +1242,7 @@ textarea {
 #guestComposerView {
   height: 100%;
   min-height: 0;
-  grid-template-rows: minmax(0, 1fr);
-  grid-auto-rows: minmax(0, 1fr);
+  grid-template-rows: minmax(190px, 1fr) auto;
   align-content: stretch;
   align-items: stretch;
 }
@@ -1083,20 +1261,30 @@ textarea {
   padding-right: 4px;
 }
 
+.admin-tabs-panel {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
 .admin-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .tab-button {
   min-height: 52px;
-  padding: 12px 14px;
+  padding: 10px 6px;
   border: 0;
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
   font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
 }
 
@@ -1183,13 +1371,21 @@ textarea {
 .guest-summary-panel {
   grid-template-rows: minmax(0, 1fr) auto;
   border: 1px solid rgba(255, 203, 107, 0.28);
+  height: auto;
+  min-height: min-content;
+  overflow: visible;
 }
 
 .guest-summary-top {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  align-content: start;
-  gap: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.guest-summary-top > * {
+  flex: none;
 }
 
 .guest-items-body,
@@ -1205,7 +1401,17 @@ textarea {
 .guest-summary-body {
   display: grid;
   align-content: start;
+  gap: 10px;
   margin-top: 24px;
+}
+
+.guest-summary-heading {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .guest-summary-subtotal-row {
@@ -1387,19 +1593,22 @@ textarea {
   min-height: 108px;
   padding: 24px;
   border-radius: var(--radius-lg);
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  border: 2px solid rgba(255, 255, 255, 0.16);
   box-shadow: var(--shadow);
 }
 
 #venmoMethodButton.guest-payment-method-card {
-  border-color: rgba(61, 149, 236, 0.35);
+  border-color: rgba(61, 149, 236, 0.55);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(61, 149, 236, 0.12);
 }
 
 #zelleMethodButton.guest-payment-method-card {
-  border-color: rgba(108, 30, 191, 0.35);
+  border-color: rgba(108, 30, 191, 0.55);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(108, 30, 191, 0.12);
 }
 
 .guest-payment-method-card:nth-child(2),
@@ -1410,17 +1619,26 @@ textarea {
 .guest-payment-method-card:hover,
 .guest-payment-method-card:focus-visible {
   transform: translateY(-2px) scale(1.01);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+}
+
+.guest-payment-method-card:active {
+  transform: scale(0.96);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
 }
 
 #venmoMethodButton.guest-payment-method-card:hover,
-#venmoMethodButton.guest-payment-method-card:focus-visible {
-  border-color: rgba(61, 149, 236, 0.6);
+#venmoMethodButton.guest-payment-method-card:focus-visible,
+#venmoMethodButton.guest-payment-method-card:active {
+  border-color: rgba(61, 149, 236, 0.9);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(61, 149, 236, 0.3), 0 0 24px rgba(61, 149, 236, 0.25);
 }
 
 #zelleMethodButton.guest-payment-method-card:hover,
-#zelleMethodButton.guest-payment-method-card:focus-visible {
-  border-color: rgba(108, 30, 191, 0.6);
+#zelleMethodButton.guest-payment-method-card:focus-visible,
+#zelleMethodButton.guest-payment-method-card:active {
+  border-color: rgba(108, 30, 191, 0.9);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(108, 30, 191, 0.3), 0 0 24px rgba(108, 30, 191, 0.25);
 }
 
 .guest-payment-label {
@@ -1581,6 +1799,103 @@ textarea {
   padding: 20px;
   background: rgba(5, 8, 14, 0.72);
   backdrop-filter: blur(10px);
+}
+
+.login-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(5, 8, 14, 0.94);
+  backdrop-filter: blur(16px);
+}
+
+.login-card {
+  width: min(100%, 380px);
+  padding: 28px 24px;
+  border-radius: var(--radius-lg);
+  background: #101622;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 16px;
+}
+
+.login-card-header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.login-logo {
+  margin: 0;
+}
+
+.login-logo img {
+  display: block;
+  width: min(100%, 190px);
+  height: auto;
+  margin: 0 auto;
+}
+
+.login-close-button {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+
+.login-view {
+  display: grid;
+  gap: 12px;
+}
+
+.login-new-user-fields {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.login-admin-link {
+  justify-self: center;
+  margin-top: 4px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.login-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 124, 133, 0.12);
+  border: 1px solid rgba(255, 124, 133, 0.25);
+  color: var(--danger);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.current-user-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.user-panel-current {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.user-panel-current strong {
+  color: var(--text);
 }
 
 .modal-card {
@@ -1757,8 +2072,117 @@ a[aria-disabled="true"] {
 }
 
 @media (max-width: 799px) {
+  .host-quick-add-panel .preset-button {
+    max-height: 130px;
+  }
+
+  .admin-tabs {
+    gap: 6px;
+  }
+
+  .tab-button {
+    min-height: 46px;
+    padding: 8px 4px;
+    font-size: 0.78rem;
+  }
+
   .qr-layout {
     grid-template-columns: 1fr;
+  }
+
+  #guestComposerView {
+    gap: 0;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+
+  .guest-items-panel,
+  .guest-summary-panel {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .guest-summary-panel {
+    border-top: 1px solid var(--panel-border);
+  }
+
+  .guest-summary-subtotal-row {
+    display: none;
+  }
+
+  .single-row-tip-grid .tip-button {
+    min-height: 92px;
+    padding: 14px;
+  }
+
+  .single-row-tip-grid .tip-button .tip-button-label {
+    font-size: clamp(1.05rem, 3vw, 1.5rem);
+  }
+
+  .guest-payment-method-card {
+    min-height: 76px;
+    padding: 14px;
+  }
+
+  .guest-payment-method-card .payment-method-logo {
+    max-height: 46px;
+  }
+
+  .qr-code img,
+  .qr-code canvas,
+  .zelle-qr-code {
+    width: clamp(120px, 22vh, 200px);
+    height: clamp(120px, 22vh, 200px);
+  }
+
+  .qr-code {
+    padding: 4px 0 6px;
+  }
+
+  .qr-payment-card {
+    gap: 8px;
+    padding: 12px 18px 14px;
+  }
+
+  .zelle-qr-logo,
+  #venmoQrLogo {
+    max-height: 56px;
+  }
+
+  .qr-note-input {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .qr-scan-frame {
+    padding: 10px;
+  }
+
+  .qr-layout {
+    gap: 10px;
+  }
+
+  .scan-steps {
+    margin-top: 6px;
+    margin-bottom: 4px;
+    gap: 6px;
+  }
+
+  .scan-step {
+    padding: 10px 6px;
+    gap: 4px;
+  }
+
+  .scan-step-icon {
+    font-size: 1.8rem;
+  }
+
+  .scan-step-label {
+    font-size: 0.92rem;
   }
 }
 
@@ -1799,6 +2223,10 @@ a[aria-disabled="true"] {
   .guest-summary-panel {
     height: 100%;
     min-height: 100%;
+  }
+
+  .host-quick-add-panel .preset-button {
+    aspect-ratio: 1.8 / 1;
   }
 
   .host-cart-item .cart-meta strong {

@@ -14,6 +14,58 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="loginGate" class="login-gate hidden" role="dialog" aria-modal="true" aria-labelledby="loginGateTitle">
+    <div class="login-card">
+      <div class="login-card-header">
+        <h1 id="loginGateTitle" class="login-logo">
+          <img src="sundazed_logo_white.png" alt="Sundazed">
+        </h1>
+        <button id="loginCloseButton" class="icon-button login-close-button hidden" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div id="loginNameView" class="login-view">
+        <label>
+          <span>Who's this?</span>
+          <select id="loginUserSelect">
+            <option value="">Select your name…</option>
+          </select>
+        </label>
+        <button id="loginContinueButton" class="primary-button" type="button" disabled>Continue</button>
+
+        <button id="loginNewUserToggle" class="ghost-button" type="button">+ New user</button>
+
+        <div id="loginNewUserFields" class="login-new-user-fields hidden">
+          <label>
+            <span>First Name</span>
+            <input id="loginFirstName" type="text" maxlength="30" placeholder="Jamie">
+          </label>
+          <label>
+            <span>Last Name</span>
+            <input id="loginLastName" type="text" maxlength="30" placeholder="Rivera">
+          </label>
+          <button id="loginCreateButton" class="primary-button" type="button">Create &amp; Continue</button>
+        </div>
+
+        <button id="loginAdminToggle" class="login-admin-link" type="button">Admin sign in</button>
+      </div>
+
+      <div id="loginAdminView" class="login-view hidden">
+        <label>
+          <span>Email</span>
+          <input id="loginAdminEmail" type="email" autocomplete="username">
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="loginAdminPassword" type="password" autocomplete="current-password">
+        </label>
+        <button id="loginAdminSubmit" class="primary-button" type="button">Sign In</button>
+        <button id="loginAdminBack" class="ghost-button" type="button">Back</button>
+      </div>
+
+      <p id="loginError" class="login-error hidden"></p>
+    </div>
+  </div>
+
   <div class="app-shell">
     <header class="topbar">
       <div>
@@ -22,10 +74,11 @@
         </h1>
       </div>
       <div class="topbar-actions">
+        <span id="currentUserBadge" class="current-user-badge hidden"></span>
         <button id="stepBackButton" class="ghost-button hidden" type="button">Back</button>
         <button id="markPaidButton" class="icon-button hidden" type="button" aria-label="Mark payment received">✓</button>
         <button id="newOrderButton" class="icon-button hidden" type="button" aria-label="Start new order">＋</button>
-        <button id="settingsToggle" class="icon-button settings-icon-button" type="button" aria-label="Open settings">⚙️</button>
+        <button id="settingsToggle" class="icon-button settings-icon-button hidden" type="button" aria-label="Open settings">⚙️</button>
       </div>
     </header>
 
@@ -37,6 +90,7 @@
           <section class="panel host-quick-add-panel">
             <div class="panel-heading">
               <h3>Menu</h3>
+              <button id="menuReorderDoneButton" class="ghost-button small-ghost-button hidden" type="button">Done</button>
             </div>
             <div id="presetItems" class="preset-grid"></div>
           </section>
@@ -63,27 +117,34 @@
         </div>
 
         <div id="hostAdminView" class="host-stack hidden">
-          <section class="panel">
+          <section class="panel admin-tabs-panel">
             <div class="admin-tabs" role="tablist" aria-label="Admin sections">
-              <button id="itemsTabButton" class="tab-button selected" type="button" role="tab" aria-selected="true">Items</button>
-              <button id="reportTabButton" class="tab-button" type="button" role="tab" aria-selected="false">Sales Report</button>
-              <button id="advancedTabButton" class="tab-button" type="button" role="tab" aria-selected="false">Admin</button>
+              <button id="userTabButton" class="tab-button selected" type="button" role="tab" aria-selected="true">User</button>
+              <button id="itemsTabButton" class="tab-button hidden" type="button" role="tab" aria-selected="false">Items</button>
+              <button id="reportTabButton" class="tab-button hidden" type="button" role="tab" aria-selected="false">Sales Report</button>
+              <button id="advancedTabButton" class="tab-button hidden" type="button" role="tab" aria-selected="false">Admin</button>
             </div>
           </section>
 
-          <section id="itemsPanel" class="panel settings-panel">
+          <section id="userPanel" class="panel settings-panel">
+            <section class="settings-category">
+              <div class="panel-heading category-heading">
+                <h3>User</h3>
+              </div>
+              <p class="user-panel-current">Logged in as <strong id="userPanelName">—</strong></p>
+              <div class="settings-actions">
+                <button id="userPanelLogoutButton" class="ghost-button" type="button">Log Out</button>
+                <button id="userPanelSwitchButton" class="ghost-button" type="button">Switch User</button>
+              </div>
+            </section>
+          </section>
+
+          <section id="itemsPanel" class="panel settings-panel hidden">
             <section class="settings-category">
               <div class="panel-heading category-heading">
                 <h3>Item List</h3>
               </div>
               <div id="settingsPresetList" class="settings-preset-list"></div>
-            </section>
-
-            <section class="settings-category">
-              <fieldset class="note-category">
-                <legend>Venmo Note</legend>
-                <div id="settingsNotePicker" class="emoji-picker"></div>
-              </fieldset>
             </section>
 
             <div class="settings-actions">
@@ -142,25 +203,40 @@
             </div>
 
             <form id="settingsForm" class="settings-form" novalidate>
-              <label>
-                <span>Venmo Username</span>
-                <input id="venmoUsernameInput" name="venmoUsername" type="text" maxlength="40" placeholder="captkamikaze">
-              </label>
+              <section class="settings-category">
+                <div class="panel-heading category-heading">
+                  <h3>Venmo</h3>
+                </div>
+                <label>
+                  <span>Venmo Username</span>
+                  <input id="venmoUsernameInput" name="venmoUsername" type="text" maxlength="40" placeholder="captkamikaze">
+                </label>
 
-              <label>
-                <span>Supabase URL</span>
-                <input id="supabaseUrlInput" name="supabaseUrl" type="url" placeholder="https://YOUR-PROJECT.supabase.co">
-              </label>
+                <label>
+                  <span>Venmo Note</span>
+                  <input id="settingsNoteInput" type="text" maxlength="60" placeholder="e.g. ☀️🎉">
+                </label>
+              </section>
 
-              <label>
-                <span>Supabase Publishable Key</span>
-                <input id="supabaseKeyInput" name="supabaseKey" type="text" placeholder="sb_publishable_...">
-              </label>
+              <section class="settings-category">
+                <div class="panel-heading category-heading">
+                  <h3>Supabase</h3>
+                </div>
+                <label>
+                  <span>Supabase URL</span>
+                  <input id="supabaseUrlInput" name="supabaseUrl" type="url" placeholder="https://YOUR-PROJECT.supabase.co">
+                </label>
 
-              <label>
-                <span>Workspace Key</span>
-                <input id="workspaceKeyInput" name="workspaceKey" type="text" maxlength="60" placeholder="sundazed-main">
-              </label>
+                <label>
+                  <span>Supabase Publishable Key</span>
+                  <input id="supabaseKeyInput" name="supabaseKey" type="text" placeholder="sb_publishable_...">
+                </label>
+
+                <label>
+                  <span>Workspace Key</span>
+                  <input id="workspaceKeyInput" name="workspaceKey" type="text" maxlength="60" placeholder="sundazed-main">
+                </label>
+              </section>
 
               <div class="settings-actions">
                 <button class="primary-button" type="submit">Save Technical Settings</button>
@@ -194,6 +270,7 @@
                 <strong id="guestSubtotalEcho">$0.00</strong>
               </div>
               <div class="guest-summary-body">
+                <h4 class="guest-summary-heading">Tip</h4>
                 <div id="tipOptions" class="tip-grid single-row-tip-grid"></div>
               </div>
               <div class="summary-row guest-tip-row">
@@ -249,27 +326,7 @@
               <strong id="qrNotePreview">🍺🍸</strong>
             </div>
           </div>
-          <section id="qrNoteSection" class="checkout-section qr-note-section">
-            <h4>Note</h4>
-            <div id="guestNotePicker" class="emoji-picker"></div>
-            <div class="summary-stack">
-              <div class="summary-row">
-                <span>Selected Note</span>
-                <strong id="qrNoteEditorPreview">🍺🍸</strong>
-              </div>
-            </div>
-          </section>
           <div class="qr-layout">
-            <section class="qr-card qr-payment-card">
-              <img id="venmoQrLogo" class="zelle-qr-logo hidden" src="venmo_logo.svg" alt="Venmo">
-              <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
-              <div id="zelleQrWrap" class="qr-static hidden">
-                <img class="zelle-qr-logo" src="zelle_logo.svg" alt="Zelle">
-                <img class="zelle-qr-code" src="zelle_qr.png" alt="Zelle QR code for Christopher Lequang">
-              </div>
-              <div id="zelleAmountDisplay" class="zelle-amount-display hidden">$0.00</div>
-            </section>
-
             <section class="qr-card qr-instruction-card">
               <p id="qrHelpPrimary" class="qr-help qr-help-primary">Scan this QR code and confirm payment in Venmo.</p>
               <div id="venmoScanSteps" class="scan-steps hidden" aria-label="How to scan with your phone camera">
@@ -290,6 +347,24 @@
               </div>
               <p id="qrHelpSecondary" class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
               <p id="qrHelpTertiary" class="qr-help subtle hidden">Recipient name will show as CHRISTOPHER LEQUANG in Zelle.</p>
+            </section>
+
+            <section class="qr-card qr-payment-card">
+              <img id="venmoQrLogo" class="zelle-qr-logo hidden" src="venmo_logo.svg" alt="Venmo">
+              <div id="zelleQrWrap" class="qr-static hidden">
+                <img class="zelle-qr-logo" src="zelle_logo.svg" alt="Zelle">
+              </div>
+              <div class="qr-amount-block">
+                <span class="qr-amount-label">Amount Due</span>
+                <div id="zelleAmountDisplay" class="zelle-amount-display hidden">$0.00</div>
+              </div>
+              <div id="qrNoteSection" class="qr-note-section hidden">
+                <input id="qrNoteInput" type="text" class="qr-note-input" maxlength="60" placeholder="Add a note (optional)">
+              </div>
+              <div class="qr-scan-frame">
+                <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
+                <img id="zelleQrImage" class="zelle-qr-code hidden" src="zelle_qr.png" alt="Zelle QR code for Christopher Lequang">
+              </div>
             </section>
           </div>
           <label id="venmoUrlField" class="url-field hidden">
@@ -317,11 +392,60 @@
               <span>Price</span>
               <input id="itemModalPrice" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="6.50">
             </label>
+            <div id="itemModalVariantsField" class="hidden">
+              <span class="variant-rows-label">Sub-options (optional)</span>
+              <p class="variant-rows-hint">Leave price blank to use the base price above.</p>
+              <div id="itemModalVariantRows" class="variant-rows"></div>
+              <button type="button" id="itemModalAddVariantRow" class="ghost-button small-ghost-button add-variant-row-button">+ Add sub-option</button>
+            </div>
             <div class="inline-actions">
               <button id="itemModalSubmit" class="primary-button" type="submit">Add Item</button>
               <button id="closeItemModalButton" class="ghost-button" type="button">Cancel</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <div id="editItemModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="editItemModalTitle">
+        <div class="modal-card">
+          <div class="panel-heading">
+            <h3 id="editItemModalTitle">Edit Item</h3>
+            <p>Update this menu item.</p>
+          </div>
+          <form id="editItemModalForm" class="custom-item-form" novalidate>
+            <label>
+              <span>Name</span>
+              <input id="editItemModalName" type="text" maxlength="30">
+            </label>
+            <label>
+              <span>Price</span>
+              <input id="editItemModalPrice" type="number" inputmode="decimal" min="0.01" step="0.01">
+            </label>
+            <div>
+              <span class="variant-rows-label">Sub-options (optional)</span>
+              <p class="variant-rows-hint">Leave price blank to use the base price above.</p>
+              <div id="editItemModalVariantRows" class="variant-rows"></div>
+              <button type="button" id="editItemModalAddVariantRow" class="ghost-button small-ghost-button add-variant-row-button">+ Add sub-option</button>
+            </div>
+            <div class="inline-actions">
+              <button id="editItemModalSubmit" class="primary-button" type="submit">Save Changes</button>
+              <button id="editItemModalDeleteButton" class="remove-button" type="button">Delete Item</button>
+              <button id="closeEditItemModalButton" class="ghost-button" type="button">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="variantModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="variantModalTitle">
+        <div class="modal-card">
+          <div class="panel-heading">
+            <h3 id="variantModalTitle">Choose an option</h3>
+            <p id="variantModalCopy">Pick one to add to the cart.</p>
+          </div>
+          <div id="variantModalGrid" class="preset-grid variant-grid"></div>
+          <div class="inline-actions">
+            <button id="closeVariantModalButton" class="ghost-button" type="button">Cancel</button>
+          </div>
         </div>
       </div>
 

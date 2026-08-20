@@ -5,16 +5,47 @@ const STORAGE_KEYS = {
 };
 
 const ALLOWED_NOTE_ICONS = ["☀️", "🎉", "🍺", "🍸", "🥂"];
-const DEFAULT_NOTE_ICONS = ["☀️", "🎉"];
+const DEFAULT_NOTE_TEXT = "☀️🎉";
 const DEFAULT_SUPABASE_URL = "https://unpqtfqjxvbijigttdhc.supabase.co";
 const DEFAULT_SUPABASE_KEY = "sb_publishable_76GzVg3VQq-sgUjytYWsRg_qOBC3jPv";
 const DEFAULT_WORKSPACE_KEY = "sundazed-main";
 const DEFAULT_PRESET_ITEMS = [
-  { id: createId(), name: "Beer", price: 5 },
-  { id: createId(), name: "Cocktail", price: 8 },
-  { id: createId(), name: "Wine", price: 7 },
-  { id: createId(), name: "Pizza", price: 4 },
-  { id: createId(), name: "Snack", price: 3 }
+  { id: createId(), name: "Vodka Soda", price: 10, variants: [] },
+  { id: createId(), name: "Tequila Soda", price: 10, variants: [] },
+  { id: createId(), name: "Yuzu Whiskey Sour", price: 12, variants: [] },
+  {
+    id: createId(),
+    name: "Shots",
+    price: 6,
+    variants: [
+      { name: "Vodka", price: null },
+      { name: "Tequila", price: null },
+      { name: "Whiskey", price: null }
+    ]
+  },
+  { id: createId(), name: "Hard Seltzer", price: 6, variants: [] },
+  { id: createId(), name: "Sparklin Chi", price: 4, variants: [] },
+  { id: createId(), name: "Whisky Diet", price: 10, variants: [] },
+  {
+    id: createId(),
+    name: "Wine",
+    price: 6,
+    variants: [
+      { name: "Red", price: null },
+      { name: "White", price: null }
+    ]
+  },
+  {
+    id: createId(),
+    name: "Margarita",
+    price: 12,
+    variants: [
+      { name: "Regular", price: null },
+      { name: "Strawberry", price: 1 },
+      { name: "Spicy", price: 1 }
+    ]
+  },
+  { id: createId(), name: "Espresso Martini", price: 14, variants: [] }
 ];
 const TIP_OPTIONS = [
   { id: "none", label: "No Tip", type: "percent", value: 0 },
@@ -40,8 +71,17 @@ const appState = {
   draggedPresetItemId: null,
   itemModalMode: null,
   tipModalValue: "",
-  supabaseClient: null
+  supabaseClient: null,
+  session: null,
+  loginMode: "name",
+  loginBusy: false,
+  pendingSwitch: false,
+  reorderMode: false,
+  suppressNextClick: false,
+  userItemOrder: []
 };
+
+const SESSION_STORAGE_KEY = "party-pay-qr-session";
 
 const elements = {
   hostScreen: document.getElementById("hostScreen"),
@@ -55,11 +95,35 @@ const elements = {
   reportPanel: document.getElementById("reportPanel"),
   advancedPanel: document.getElementById("advancedPanel"),
   settingsToggle: document.getElementById("settingsToggle"),
+  currentUserBadge: document.getElementById("currentUserBadge"),
+  userTabButton: document.getElementById("userTabButton"),
+  userPanel: document.getElementById("userPanel"),
+  userPanelName: document.getElementById("userPanelName"),
+  userPanelLogoutButton: document.getElementById("userPanelLogoutButton"),
+  userPanelSwitchButton: document.getElementById("userPanelSwitchButton"),
+  loginGate: document.getElementById("loginGate"),
+  loginNameView: document.getElementById("loginNameView"),
+  loginAdminView: document.getElementById("loginAdminView"),
+  loginUserSelect: document.getElementById("loginUserSelect"),
+  loginContinueButton: document.getElementById("loginContinueButton"),
+  loginNewUserToggle: document.getElementById("loginNewUserToggle"),
+  loginNewUserFields: document.getElementById("loginNewUserFields"),
+  loginFirstName: document.getElementById("loginFirstName"),
+  loginLastName: document.getElementById("loginLastName"),
+  loginCreateButton: document.getElementById("loginCreateButton"),
+  loginAdminToggle: document.getElementById("loginAdminToggle"),
+  loginAdminEmail: document.getElementById("loginAdminEmail"),
+  loginAdminPassword: document.getElementById("loginAdminPassword"),
+  loginAdminSubmit: document.getElementById("loginAdminSubmit"),
+  loginAdminBack: document.getElementById("loginAdminBack"),
+  loginError: document.getElementById("loginError"),
+  loginCloseButton: document.getElementById("loginCloseButton"),
   stepBackButton: document.getElementById("stepBackButton"),
   itemsTabButton: document.getElementById("itemsTabButton"),
   reportTabButton: document.getElementById("reportTabButton"),
   advancedTabButton: document.getElementById("advancedTabButton"),
   presetItems: document.getElementById("presetItems"),
+  menuReorderDoneButton: document.getElementById("menuReorderDoneButton"),
   hostCartList: document.getElementById("hostCartList"),
   hostCartBody: document.querySelector(".host-cart-body"),
   hostCartEmpty: document.getElementById("hostCartEmpty"),
@@ -79,8 +143,7 @@ const elements = {
   guestCartList: document.getElementById("guestCartList"),
   guestSubtotal: document.getElementById("guestSubtotal"),
   guestSubtotalEcho: document.getElementById("guestSubtotalEcho"),
-  qrNoteEditorPreview: document.getElementById("qrNoteEditorPreview"),
-  guestNotePicker: document.getElementById("guestNotePicker"),
+  qrNoteInput: document.getElementById("qrNoteInput"),
   tipOptions: document.getElementById("tipOptions"),
   guestTip: document.getElementById("guestTip"),
   guestTotal: document.getElementById("guestTotal"),
@@ -96,6 +159,7 @@ const elements = {
   qrCode: document.getElementById("qrCode"),
   venmoQrLogo: document.getElementById("venmoQrLogo"),
   zelleQrWrap: document.getElementById("zelleQrWrap"),
+  zelleQrImage: document.getElementById("zelleQrImage"),
   qrHelpPrimary: document.getElementById("qrHelpPrimary"),
   venmoScanSteps: document.getElementById("venmoScanSteps"),
   qrHelpSecondary: document.getElementById("qrHelpSecondary"),
@@ -112,7 +176,7 @@ const elements = {
   supabaseUrlInput: document.getElementById("supabaseUrlInput"),
   supabaseKeyInput: document.getElementById("supabaseKeyInput"),
   workspaceKeyInput: document.getElementById("workspaceKeyInput"),
-  settingsNotePicker: document.getElementById("settingsNotePicker"),
+  settingsNoteInput: document.getElementById("settingsNoteInput"),
   resetDefaultsButton: document.getElementById("resetDefaultsButton"),
   settingsPresetList: document.getElementById("settingsPresetList"),
   itemModal: document.getElementById("itemModal"),
@@ -121,8 +185,24 @@ const elements = {
   itemModalCopy: document.getElementById("itemModalCopy"),
   itemModalName: document.getElementById("itemModalName"),
   itemModalPrice: document.getElementById("itemModalPrice"),
+  itemModalVariantsField: document.getElementById("itemModalVariantsField"),
+  itemModalVariantRows: document.getElementById("itemModalVariantRows"),
+  itemModalAddVariantRow: document.getElementById("itemModalAddVariantRow"),
   itemModalSubmit: document.getElementById("itemModalSubmit"),
   closeItemModalButton: document.getElementById("closeItemModalButton"),
+  editItemModal: document.getElementById("editItemModal"),
+  editItemModalForm: document.getElementById("editItemModalForm"),
+  editItemModalName: document.getElementById("editItemModalName"),
+  editItemModalPrice: document.getElementById("editItemModalPrice"),
+  editItemModalVariantRows: document.getElementById("editItemModalVariantRows"),
+  editItemModalAddVariantRow: document.getElementById("editItemModalAddVariantRow"),
+  editItemModalDeleteButton: document.getElementById("editItemModalDeleteButton"),
+  closeEditItemModalButton: document.getElementById("closeEditItemModalButton"),
+  variantModal: document.getElementById("variantModal"),
+  variantModalTitle: document.getElementById("variantModalTitle"),
+  variantModalCopy: document.getElementById("variantModalCopy"),
+  variantModalGrid: document.getElementById("variantModalGrid"),
+  closeVariantModalButton: document.getElementById("closeVariantModalButton"),
   tipModal: document.getElementById("tipModal"),
   tipModalDisplay: document.getElementById("tipModalDisplay"),
   tipNumpad: document.getElementById("tipNumpad"),
@@ -138,8 +218,13 @@ const elements = {
 function init() {
   appState.cart = loadCart();
   appState.supabaseClient = createSupabaseClient();
+  appState.session = loadSession();
   bindEvents();
   renderAll();
+  renderLoginState();
+  if (appState.session) {
+    loadUserItemOrder();
+  }
   registerServiceWorker();
   syncFromCloudOnLoad().finally(() => {
     refreshReportData();
@@ -150,6 +235,18 @@ function bindEvents() {
   elements.itemModalForm.addEventListener("submit", handleItemModalSubmit);
   elements.closeItemModalButton.addEventListener("click", closeItemModal);
   elements.itemModal.addEventListener("click", handleModalBackdropClick);
+  elements.itemModalAddVariantRow.addEventListener("click", () => {
+    addVariantRow(elements.itemModalVariantRows, itemModalVariantsDraft);
+  });
+  elements.closeVariantModalButton.addEventListener("click", closeVariantModal);
+  elements.variantModal.addEventListener("click", handleModalBackdropClick);
+  elements.editItemModalForm.addEventListener("submit", handleEditItemModalSubmit);
+  elements.editItemModalAddVariantRow.addEventListener("click", () => {
+    addVariantRow(elements.editItemModalVariantRows, editItemModalVariantsDraft);
+  });
+  elements.editItemModalDeleteButton.addEventListener("click", handleEditItemModalDelete);
+  elements.closeEditItemModalButton.addEventListener("click", closeEditItemModal);
+  elements.editItemModal.addEventListener("click", handleModalBackdropClick);
   elements.handToGuestButton.addEventListener("click", goToGuestScreen);
   elements.tipOptions.addEventListener("click", handleTipClick);
   elements.tipNumpad.addEventListener("click", handleTipNumpadClick);
@@ -165,10 +262,39 @@ function bindEvents() {
   }
   elements.venmoMethodButton.addEventListener("click", () => choosePaymentMethod("venmo"));
   elements.zelleMethodButton.addEventListener("click", () => choosePaymentMethod("zelle"));
+  elements.qrNoteInput.addEventListener("input", () => {
+    appState.noteText = elements.qrNoteInput.value;
+    updateSummary();
+  });
+  window.addEventListener("resize", resizeNoteInput);
   elements.clearCartButton.addEventListener("click", clearCart);
   elements.markPaidButton.addEventListener("click", markOrderPaid);
   elements.newOrderButton.addEventListener("click", resetOrder);
   elements.settingsToggle.addEventListener("click", toggleSettings);
+  elements.userTabButton.addEventListener("click", () => switchAdminTab("user"));
+  elements.userPanelLogoutButton.addEventListener("click", handleLogOut);
+  elements.userPanelSwitchButton.addEventListener("click", handleSwitchUser);
+  elements.loginCloseButton.addEventListener("click", handleLoginClose);
+  elements.menuReorderDoneButton.addEventListener("click", exitReorderMode);
+  elements.loginUserSelect.addEventListener("change", handleLoginUserSelectChange);
+  elements.loginContinueButton.addEventListener("click", handleLoginContinue);
+  elements.loginNewUserToggle.addEventListener("click", () => {
+    elements.loginNewUserFields.classList.toggle("hidden");
+  });
+  elements.loginCreateButton.addEventListener("click", handleLoginCreateUser);
+  elements.loginAdminToggle.addEventListener("click", () => setLoginMode("admin"));
+  elements.loginAdminBack.addEventListener("click", () => setLoginMode("name"));
+  elements.loginAdminSubmit.addEventListener("click", handleLoginAdminSubmit);
+  elements.loginAdminPassword.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleLoginAdminSubmit();
+    }
+  });
+  elements.loginLastName.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleLoginCreateUser();
+    }
+  });
   elements.itemsTabButton.addEventListener("click", () => switchAdminTab("items"));
   elements.reportTabButton.addEventListener("click", () => switchAdminTab("report"));
   elements.advancedTabButton.addEventListener("click", () => switchAdminTab("advanced"));
@@ -182,10 +308,8 @@ function bindEvents() {
 
 function renderAll() {
   renderPresetItems();
-  renderSettingsNotePicker();
   renderHostCart();
   renderGuestCart();
-  renderGuestNotePicker();
   renderTipOptions();
   renderSettingsForm();
   renderSettingsPresetList();
@@ -194,15 +318,106 @@ function renderAll() {
   updateScreen();
 }
 
+function getOrderedPresetItems() {
+  const items = appState.settings.presetItems;
+  const order = appState.userItemOrder;
+  if (!Array.isArray(order) || order.length === 0) {
+    return [...items];
+  }
+
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const seen = new Set();
+  const ordered = [];
+
+  order.forEach((id) => {
+    const item = byId.get(id);
+    if (item && !seen.has(id)) {
+      ordered.push(item);
+      seen.add(id);
+    }
+  });
+
+  items.forEach((item) => {
+    if (!seen.has(item.id)) {
+      ordered.push(item);
+    }
+  });
+
+  return ordered;
+}
+
+async function loadUserItemOrder() {
+  appState.userItemOrder = [];
+  if (!appState.session || !appState.supabaseClient) {
+    renderPresetItems();
+    return;
+  }
+
+  try {
+    const { data, error } = await appState.supabaseClient
+      .from("user_item_order")
+      .select("user_id, item_order")
+      .eq("user_id", appState.session.id)
+      .maybeSingle();
+
+    if (!error && data && Array.isArray(data.item_order)) {
+      appState.userItemOrder = data.item_order;
+    }
+  } catch (error) {
+    // Ignore; falls back to the shared item order.
+  }
+
+  renderPresetItems();
+}
+
+async function saveUserItemOrder() {
+  if (!appState.session || !appState.supabaseClient) {
+    return;
+  }
+
+  try {
+    await appState.supabaseClient
+      .from("user_item_order")
+      .upsert(
+        { user_id: appState.session.id, item_order: appState.userItemOrder, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+  } catch (error) {
+    // Ignore sync failures; the new order still applies for this session.
+  }
+}
+
 function renderPresetItems() {
   elements.presetItems.innerHTML = "";
+  elements.presetItems.classList.toggle("reorder-mode", appState.reorderMode);
 
-  appState.settings.presetItems.forEach((item) => {
+  getOrderedPresetItems().forEach((item) => {
+    const hasVariants = Array.isArray(item.variants) && item.variants.length > 0;
     const button = document.createElement("button");
     button.className = "preset-button";
     button.type = "button";
-    button.innerHTML = `<strong>${escapeHtml(item.name)}</strong><span>${formatCurrency(item.price)}</span>`;
-    button.addEventListener("click", () => addItemToCart(item.name, item.price));
+    button.dataset.itemId = item.id;
+    button.style.setProperty("--jiggle-delay", Math.floor(Math.random() * 180));
+    const dots = hasVariants
+      ? `<span class="preset-variant-dots" aria-hidden="true">${"<span class=\"preset-variant-dot\"></span>".repeat(item.variants.length)}</span>`
+      : "";
+    button.innerHTML = `<strong>${escapeHtml(item.name)}</strong><span>${formatCurrency(item.price)}</span>${dots}`;
+    button.addEventListener("click", (event) => {
+      if (appState.suppressNextClick) {
+        appState.suppressNextClick = false;
+        event.preventDefault();
+        return;
+      }
+      if (appState.reorderMode) {
+        return;
+      }
+      if (hasVariants) {
+        openVariantModal(item);
+      } else {
+        addItemToCart(item.name, item.price);
+      }
+    });
+    attachPresetLongPress(button, item);
     elements.presetItems.appendChild(button);
   });
 
@@ -210,54 +425,224 @@ function renderPresetItems() {
   customButton.className = "preset-button";
   customButton.type = "button";
   customButton.innerHTML = "<strong>Custom</strong><span>Add your own item</span>";
-  customButton.addEventListener("click", () => openItemModal("custom"));
+  customButton.addEventListener("click", () => {
+    if (!appState.reorderMode) {
+      openItemModal("custom");
+    }
+  });
   elements.presetItems.appendChild(customButton);
 }
 
-function renderSettingsNotePicker() {
-  renderEmojiPicker(elements.settingsNotePicker, appState.settings.defaultNoteIcons, (icon) => {
-    const selectedIcons = new Set(appState.settings.defaultNoteIcons);
+const PRESET_LONG_PRESS_MS = 3000;
+const PRESET_MOVE_CANCEL_PX = 10;
 
-    if (selectedIcons.has(icon)) {
-      selectedIcons.delete(icon);
-    } else {
-      selectedIcons.add(icon);
+let presetDragState = null;
+
+function attachPresetLongPress(button, item) {
+  button.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
     }
 
-    appState.settings.defaultNoteIcons = ALLOWED_NOTE_ICONS.filter((entry) => selectedIcons.has(entry));
-    renderSettingsNotePicker();
+    if (appState.reorderMode) {
+      beginPresetDrag(item, button, event);
+      return;
+    }
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+    let cancelled = false;
+
+    const onMove = (moveEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
+      if (Math.hypot(dx, dy) > PRESET_MOVE_CANCEL_PX) {
+        cancel();
+      }
+    };
+
+    const cancel = () => {
+      if (cancelled) {
+        return;
+      }
+      cancelled = true;
+      clearTimeout(timer);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", cancel);
+      window.removeEventListener("pointercancel", cancel);
+    };
+
+    const timer = setTimeout(() => {
+      if (cancelled) {
+        return;
+      }
+      cancel();
+      appState.suppressNextClick = true;
+      enterReorderMode();
+      beginPresetDrag(item, button, event);
+    }, PRESET_LONG_PRESS_MS);
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", cancel);
+    window.addEventListener("pointercancel", cancel);
   });
 }
 
-function renderGuestNotePicker() {
-  renderEmojiPicker(elements.guestNotePicker, appState.settings.selectedNoteIcons, (icon) => {
-    const selectedIcons = new Set(appState.settings.selectedNoteIcons);
-
-    if (selectedIcons.has(icon)) {
-      selectedIcons.delete(icon);
-    } else {
-      selectedIcons.add(icon);
-    }
-
-    appState.settings.selectedNoteIcons = ALLOWED_NOTE_ICONS.filter((entry) => selectedIcons.has(entry));
-    saveSettings();
-    updateSummary();
-    renderGuestNotePicker();
-    renderSettingsNotePicker();
+function enterReorderMode() {
+  if (appState.reorderMode) {
+    return;
+  }
+  appState.reorderMode = true;
+  elements.presetItems.classList.add("reorder-mode");
+  elements.menuReorderDoneButton.classList.remove("hidden");
+  [...elements.presetItems.querySelectorAll(".preset-button[data-item-id]")].forEach((el) => {
+    el.style.setProperty("--jiggle-delay", Math.floor(Math.random() * 180));
   });
 }
 
-function renderEmojiPicker(container, selectedIcons, onToggle) {
-  container.innerHTML = "";
-  ALLOWED_NOTE_ICONS.forEach((icon) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `emoji-button ${selectedIcons.includes(icon) ? "selected" : ""}`;
-    button.textContent = icon;
-    button.setAttribute("aria-pressed", selectedIcons.includes(icon) ? "true" : "false");
-    button.addEventListener("click", () => onToggle(icon));
-    container.appendChild(button);
+function exitReorderMode() {
+  if (presetDragState) {
+    endPresetDrag(presetDragState.pointerId);
+  }
+  appState.reorderMode = false;
+  elements.presetItems.classList.remove("reorder-mode");
+  elements.menuReorderDoneButton.classList.add("hidden");
+  renderPresetItems();
+}
+
+function beginPresetDrag(item, button, event) {
+  event.preventDefault();
+  try {
+    button.setPointerCapture(event.pointerId);
+  } catch (error) {
+    // Ignore capture failures.
+  }
+
+  const rect = button.getBoundingClientRect();
+  presetDragState = {
+    item,
+    button,
+    pointerId: event.pointerId,
+    offsetX: event.clientX - rect.left,
+    offsetY: event.clientY - rect.top
+  };
+
+  button.classList.add("dragging");
+  button.style.position = "fixed";
+  button.style.left = `${rect.left}px`;
+  button.style.top = `${rect.top}px`;
+  button.style.width = `${rect.width}px`;
+  button.style.height = `${rect.height}px`;
+  button.style.margin = "0";
+
+  button.addEventListener("pointermove", handlePresetDragMove);
+  button.addEventListener("pointerup", handlePresetDragEnd);
+  button.addEventListener("pointercancel", handlePresetDragEnd);
+}
+
+function handlePresetDragMove(event) {
+  if (!presetDragState || event.pointerId !== presetDragState.pointerId) {
+    return;
+  }
+
+  const { button, offsetX, offsetY } = presetDragState;
+  button.style.left = `${event.clientX - offsetX}px`;
+  button.style.top = `${event.clientY - offsetY}px`;
+
+  button.style.pointerEvents = "none";
+  const targetEl = document.elementFromPoint(event.clientX, event.clientY);
+  button.style.pointerEvents = "";
+
+  const targetButton = targetEl ? targetEl.closest(".preset-button[data-item-id]") : null;
+  if (!targetButton || targetButton === button) {
+    return;
+  }
+
+  const items = getOrderedPresetItems();
+  const fromIndex = items.findIndex((entry) => entry.id === presetDragState.item.id);
+  const toIndex = items.findIndex((entry) => entry.id === targetButton.dataset.itemId);
+  if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+    reorderPresetTilesWithFlip(fromIndex, toIndex, button);
+  }
+}
+
+function reorderPresetTilesWithFlip(fromIndex, toIndex, draggedButton) {
+  const container = elements.presetItems;
+  const allTiles = [...container.querySelectorAll(".preset-button[data-item-id]")];
+  const firstRects = new Map(
+    allTiles.filter((el) => el !== draggedButton).map((el) => [el.dataset.itemId, el.getBoundingClientRect()])
+  );
+
+  const items = getOrderedPresetItems();
+  const [moved] = items.splice(fromIndex, 1);
+  items.splice(toIndex, 0, moved);
+  appState.userItemOrder = items.map((entry) => entry.id);
+
+  items.forEach((entry) => {
+    const el = allTiles.find((node) => node.dataset.itemId === entry.id);
+    if (el) {
+      container.appendChild(el);
+    }
   });
+  const customButton = container.querySelector(".preset-button:not([data-item-id])");
+  if (customButton) {
+    container.appendChild(customButton);
+  }
+
+  allTiles.forEach((el) => {
+    if (el === draggedButton) {
+      return;
+    }
+    const firstRect = firstRects.get(el.dataset.itemId);
+    if (!firstRect) {
+      return;
+    }
+    const lastRect = el.getBoundingClientRect();
+    const dx = firstRect.left - lastRect.left;
+    const dy = firstRect.top - lastRect.top;
+    if (dx || dy) {
+      el.style.transition = "none";
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = "transform 200ms ease";
+        el.style.transform = "";
+      });
+    }
+  });
+}
+
+function handlePresetDragEnd(event) {
+  if (!presetDragState || event.pointerId !== presetDragState.pointerId) {
+    return;
+  }
+  endPresetDrag(event.pointerId);
+}
+
+function endPresetDrag(pointerId) {
+  if (!presetDragState) {
+    return;
+  }
+  const { button } = presetDragState;
+  button.removeEventListener("pointermove", handlePresetDragMove);
+  button.removeEventListener("pointerup", handlePresetDragEnd);
+  button.removeEventListener("pointercancel", handlePresetDragEnd);
+  try {
+    button.releasePointerCapture(pointerId);
+  } catch (error) {
+    // Ignore release failures.
+  }
+
+  button.classList.remove("dragging");
+  button.style.position = "";
+  button.style.left = "";
+  button.style.top = "";
+  button.style.width = "";
+  button.style.height = "";
+  button.style.margin = "";
+  button.style.transform = "";
+
+  presetDragState = null;
+  saveUserItemOrder();
 }
 
 function renderHostCart() {
@@ -271,7 +656,7 @@ function renderHostCart() {
     row.innerHTML = `
       <div class="cart-meta">
         <strong>${escapeHtml(item.name)}</strong>
-        <p>${item.quantity} × ${formatCurrency(item.price)}</p>
+        <p>${item.quantity} × ${formatCurrency(item.price)}${item.addedBy ? ` · Added by ${escapeHtml(item.addedBy)}` : ""}</p>
       </div>
       <div class="cart-controls">
         <button class="stepper-button" type="button" aria-label="Decrease ${escapeHtml(item.name)}">-</button>
@@ -339,6 +724,7 @@ function renderTipOptions() {
 
 function renderSettingsForm() {
   elements.venmoUsernameInput.value = appState.settings.venmoUsername;
+  elements.settingsNoteInput.value = appState.settings.defaultNoteIcons;
   elements.supabaseUrlInput.value = appState.settings.supabaseUrl || "";
   elements.supabaseKeyInput.value = appState.settings.supabaseKey || "";
   elements.workspaceKeyInput.value = appState.settings.workspaceKey || "";
@@ -352,57 +738,24 @@ function renderSettingsPresetList() {
     row.className = "preset-row";
     row.draggable = true;
     row.dataset.presetId = item.id;
+    const variantCount = Array.isArray(item.variants) ? item.variants.length : 0;
     row.innerHTML = `
       <div class="preset-row-main">
         <span class="drag-handle" aria-hidden="true">☰</span>
         <div>
           <strong>${escapeHtml(item.name)}</strong>
-          <p>${formatCurrency(item.price)}</p>
+          <p>${formatCurrency(item.price)}${variantCount ? ` · ${variantCount} option${variantCount === 1 ? "" : "s"}` : ""}</p>
         </div>
       </div>
       <div class="preset-row-actions">
-        <button class="stepper-button" type="button">Rename</button>
-        <button class="stepper-button" type="button">Price</button>
-        <button class="remove-button" type="button">Delete</button>
+        <button class="stepper-button" type="button">Edit</button>
       </div>
     `;
 
-    const [renameButton, priceButton, deleteButton] = row.querySelectorAll("button");
+    const [editButton] = row.querySelectorAll("button");
 
-    renameButton.addEventListener("click", () => {
-      const nextName = window.prompt("Preset item name", item.name);
-      if (nextName === null) {
-        return;
-      }
-      const trimmed = nextName.trim();
-      if (!trimmed) {
-        showMessage("Preset item name cannot be empty.");
-        return;
-      }
-      item.name = trimmed;
-      saveSettings();
-      renderAll();
-    });
-
-    priceButton.addEventListener("click", () => {
-      const nextPrice = window.prompt("Preset item price", item.price.toFixed(2));
-      if (nextPrice === null) {
-        return;
-      }
-      const parsed = Number.parseFloat(nextPrice);
-      if (!Number.isFinite(parsed) || parsed <= 0) {
-        showMessage("Preset item price must be greater than zero.");
-        return;
-      }
-      item.price = roundMoney(parsed);
-      saveSettings();
-      renderAll();
-    });
-
-    deleteButton.addEventListener("click", () => {
-      appState.settings.presetItems = appState.settings.presetItems.filter((entry) => entry.id !== item.id);
-      saveSettings();
-      renderAll();
+    editButton.addEventListener("click", () => {
+      openEditItemModal(item);
     });
 
     row.addEventListener("dragstart", (event) => {
@@ -511,7 +864,10 @@ function updateSummary() {
   setElementText(elements.guestSubtotalEcho, formatCurrency(subtotal));
   setElementText(elements.guestTip, formatCurrency(tip));
   setElementText(elements.guestTotal, formatCurrency(total));
-  setElementText(elements.qrNoteEditorPreview, note || "No icons selected");
+  if (document.activeElement !== elements.qrNoteInput) {
+    elements.qrNoteInput.value = note;
+  }
+  resizeNoteInput();
   setElementText(elements.qrTotal, formatCurrency(total));
   setElementText(elements.zelleAmountDisplay, formatCurrency(total));
   setElementText(elements.qrMethodName, appState.paymentMethod === "zelle" ? "Zelle" : "Venmo");
@@ -596,7 +952,7 @@ function renderRecentOrders(orders) {
       row.innerHTML = `
         <div>
           <strong>${formatCurrency(order.total)}</strong>
-          <p>${order.itemCount} item${order.itemCount === 1 ? "" : "s"} · Tip ${formatCurrency(order.tip)}</p>
+          <p>${order.itemCount} item${order.itemCount === 1 ? "" : "s"} · Tip ${formatCurrency(order.tip)}${order.userName ? ` · ${escapeHtml(order.userName)}` : ""}</p>
           <time datetime="${order.timestamp}">${formatReportDate(order.timestamp)}</time>
         </div>
         <strong>${order.note || "No icons"}</strong>
@@ -623,23 +979,31 @@ function updateScreen() {
   elements.guestScreen.classList.toggle("hidden", appState.screen !== "guest");
   elements.paymentScreen.classList.toggle("hidden", appState.screen !== "payment");
   elements.qrScreen.classList.toggle("hidden", appState.screen !== "qr");
-  elements.settingsToggle.classList.toggle("hidden", appState.screen !== "host");
+  elements.settingsToggle.classList.toggle("hidden", appState.screen !== "host" || !appState.session);
   elements.stepBackButton.classList.toggle("hidden", appState.screen === "host");
   elements.markPaidButton.classList.toggle("hidden", appState.screen !== "qr");
   elements.newOrderButton.classList.toggle("hidden", appState.screen !== "qr");
   elements.hostComposerView.classList.toggle("hidden", appState.screen !== "host" || appState.hostAdminOpen);
   elements.hostAdminView.classList.toggle("hidden", appState.screen !== "host" || !appState.hostAdminOpen);
+  const isAdmin = Boolean(appState.session && appState.session.type === "admin");
+  elements.itemsTabButton.classList.toggle("hidden", !isAdmin);
+  elements.reportTabButton.classList.toggle("hidden", !isAdmin);
+  elements.advancedTabButton.classList.toggle("hidden", !isAdmin);
+  elements.userPanel.classList.toggle("hidden", appState.adminTab !== "user");
   elements.itemsPanel.classList.toggle("hidden", appState.adminTab !== "items");
   elements.reportPanel.classList.toggle("hidden", appState.adminTab !== "report");
   elements.advancedPanel.classList.toggle("hidden", appState.adminTab !== "advanced");
+  elements.userTabButton.classList.toggle("selected", appState.adminTab === "user");
   elements.itemsTabButton.classList.toggle("selected", appState.adminTab === "items");
   elements.reportTabButton.classList.toggle("selected", appState.adminTab === "report");
   elements.advancedTabButton.classList.toggle("selected", appState.adminTab === "advanced");
+  elements.userTabButton.setAttribute("aria-selected", appState.adminTab === "user" ? "true" : "false");
   elements.itemsTabButton.setAttribute("aria-selected", appState.adminTab === "items" ? "true" : "false");
   elements.reportTabButton.setAttribute("aria-selected", appState.adminTab === "report" ? "true" : "false");
   elements.advancedTabButton.setAttribute("aria-selected", appState.adminTab === "advanced" ? "true" : "false");
   elements.settingsToggle.setAttribute("aria-label", appState.hostAdminOpen ? "Close settings" : "Open settings");
   elements.settingsToggle.textContent = appState.hostAdminOpen ? "✕" : "⚙️";
+  renderUserPanel();
   elements.venmoMethodButton.classList.toggle("selected", appState.paymentMethod === "venmo");
   elements.zelleMethodButton.classList.toggle("selected", appState.paymentMethod === "zelle");
 
@@ -657,7 +1021,8 @@ function addItemToCart(name, price) {
       id: createId(),
       name,
       price: roundMoney(price),
-      quantity: 1
+      quantity: 1,
+      addedBy: appState.session ? appState.session.displayName : null
     });
   }
   persistCart();
@@ -757,7 +1122,8 @@ function handleItemModalSubmit(event) {
     appState.settings.presetItems.push({
       id: createId(),
       name,
-      price: roundMoney(price)
+      price: roundMoney(price),
+      variants: sanitizeVariants(itemModalVariantsDraft)
     });
     saveSettings();
     renderAll();
@@ -771,6 +1137,8 @@ function handleItemModalSubmit(event) {
   showMessage("Custom item added.", true);
 }
 
+let itemModalVariantsDraft = [];
+
 function openItemModal(mode) {
   appState.itemModalMode = mode;
   elements.itemModalTitle.textContent = mode === "preset" ? "Add Menu Item" : "Add Custom Item";
@@ -780,12 +1148,169 @@ function openItemModal(mode) {
   elements.itemModalSubmit.textContent = mode === "preset" ? "Add Menu Item" : "Add Custom Item";
   elements.itemModalName.placeholder = mode === "preset" ? "Soda" : "Late-night tacos";
   elements.itemModalPrice.placeholder = mode === "preset" ? "2.00" : "6.50";
+  elements.itemModalVariantsField.classList.toggle("hidden", mode !== "preset");
+  itemModalVariantsDraft = [];
+  renderVariantRows(elements.itemModalVariantRows, itemModalVariantsDraft);
   elements.itemModal.classList.remove("hidden");
   elements.itemModalName.focus();
 }
 
+function renderVariantRows(container, variants) {
+  container.innerHTML = "";
+  variants.forEach((variant, index) => {
+    const row = document.createElement("div");
+    row.className = "variant-row";
+    const priceValue = variant.price === null || variant.price === undefined ? "" : variant.price;
+    row.innerHTML = `
+      <input type="text" class="variant-row-name" maxlength="30" placeholder="Option name" value="${escapeHtml(String(variant.name || ""))}">
+      <div class="variant-row-price-field">
+        <span class="variant-row-price-prefix" aria-hidden="true">$</span>
+        <input type="number" class="variant-row-price" min="0.01" step="0.01" inputmode="decimal" placeholder="Base price" value="${escapeHtml(String(priceValue))}">
+      </div>
+      <button type="button" class="variant-row-remove" aria-label="Remove sub-option">×</button>
+    `;
+    const nameInput = row.querySelector(".variant-row-name");
+    const priceInput = row.querySelector(".variant-row-price");
+    const removeButton = row.querySelector(".variant-row-remove");
+    nameInput.addEventListener("input", () => {
+      variant.name = nameInput.value;
+    });
+    priceInput.addEventListener("input", () => {
+      variant.price = priceInput.value;
+    });
+    removeButton.addEventListener("click", () => {
+      variants.splice(index, 1);
+      renderVariantRows(container, variants);
+    });
+    container.appendChild(row);
+  });
+}
+
+function addVariantRow(container, variants) {
+  variants.push({ name: "", price: "" });
+  renderVariantRows(container, variants);
+}
+
+let editItemModalItem = null;
+let editItemModalVariantsDraft = [];
+
+function openEditItemModal(item) {
+  editItemModalItem = item;
+  elements.editItemModalName.value = item.name;
+  elements.editItemModalPrice.value = item.price;
+  editItemModalVariantsDraft = (Array.isArray(item.variants) ? item.variants : []).map((variant) => ({
+    name: typeof variant === "string" ? variant : variant.name,
+    price: typeof variant === "string" || variant.price === null || variant.price === undefined ? "" : variant.price
+  }));
+  renderVariantRows(elements.editItemModalVariantRows, editItemModalVariantsDraft);
+  elements.editItemModal.classList.remove("hidden");
+  elements.editItemModalName.focus();
+}
+
+function closeEditItemModal() {
+  editItemModalItem = null;
+  editItemModalVariantsDraft = [];
+  elements.editItemModal.classList.add("hidden");
+}
+
+function handleEditItemModalSubmit(event) {
+  event.preventDefault();
+  if (!editItemModalItem) {
+    return;
+  }
+
+  const name = elements.editItemModalName.value.trim();
+  const price = Number.parseFloat(elements.editItemModalPrice.value);
+
+  if (!name) {
+    showMessage("Item name is required.");
+    return;
+  }
+
+  if (!Number.isFinite(price) || price <= 0) {
+    showMessage("Item price must be greater than zero.");
+    return;
+  }
+
+  editItemModalItem.name = name;
+  editItemModalItem.price = roundMoney(price);
+  editItemModalItem.variants = sanitizeVariants(editItemModalVariantsDraft);
+  saveSettings();
+  renderAll();
+  closeEditItemModal();
+  showMessage("Item updated.", true);
+}
+
+async function handleEditItemModalDelete() {
+  if (!editItemModalItem) {
+    return;
+  }
+
+  if (!(await confirmAction(`Delete ${editItemModalItem.name}?`))) {
+    return;
+  }
+
+  appState.settings.presetItems = appState.settings.presetItems.filter((entry) => entry.id !== editItemModalItem.id);
+  saveSettings();
+  renderAll();
+  closeEditItemModal();
+}
+
+function openVariantModal(item) {
+  elements.variantModalTitle.textContent = item.name;
+  elements.variantModalCopy.textContent = `Choose a ${item.name} option to add.`;
+  elements.variantModalGrid.innerHTML = "";
+  item.variants.forEach((variant) => {
+    const name = typeof variant === "string" ? variant : variant.name;
+    const price = typeof variant === "string" || variant.price === null || variant.price === undefined
+      ? item.price
+      : variant.price;
+    const button = document.createElement("button");
+    button.className = "preset-button";
+    button.type = "button";
+    button.innerHTML = `<strong>${escapeHtml(name)}</strong><span>${formatCurrency(price)}</span>`;
+    button.addEventListener("click", () => {
+      addItemToCart(`${item.name} – ${name}`, price);
+      closeVariantModal();
+    });
+    elements.variantModalGrid.appendChild(button);
+  });
+  elements.variantModal.classList.remove("hidden");
+}
+
+function closeVariantModal() {
+  elements.variantModal.classList.add("hidden");
+}
+
+let noteWidthMeasureCanvas = null;
+
+function resizeNoteInput() {
+  const input = elements.qrNoteInput;
+  if (!input || input.classList.contains("hidden") || elements.qrNoteSection.classList.contains("hidden")) {
+    return;
+  }
+
+  const isVenmo = appState.paymentMethod !== "zelle";
+  const qrEl = isVenmo ? elements.qrCode.querySelector("img") : elements.zelleQrImage;
+  const measuredQrWidth = qrEl ? qrEl.getBoundingClientRect().width : 0;
+  const qrWidth = measuredQrWidth > 0 ? measuredQrWidth : 260;
+
+  if (!noteWidthMeasureCanvas) {
+    noteWidthMeasureCanvas = document.createElement("canvas");
+  }
+  const ctx = noteWidthMeasureCanvas.getContext("2d");
+  const cs = getComputedStyle(input);
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const textWidth = ctx.measureText(input.value).width;
+  const horizontalSlack = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 10;
+
+  const desiredWidth = Math.max(qrWidth, Math.ceil(textWidth + horizontalSlack));
+  input.style.width = `${desiredWidth}px`;
+}
+
 function closeItemModal() {
   appState.itemModalMode = null;
+  itemModalVariantsDraft = [];
   elements.itemModalForm.reset();
   elements.itemModal.classList.add("hidden");
 }
@@ -810,6 +1335,10 @@ function handleModalBackdropClick(event) {
     closeTipModal();
   } else if (event.target === elements.confirmModal) {
     resolveConfirmModal(false);
+  } else if (event.target === elements.variantModal) {
+    closeVariantModal();
+  } else if (event.target === elements.editItemModal) {
+    closeEditItemModal();
   }
 }
 
@@ -909,16 +1438,7 @@ function handleSettingsSave(event) {
   appState.settings.supabaseUrl = elements.supabaseUrlInput.value.trim();
   appState.settings.supabaseKey = elements.supabaseKeyInput.value.trim();
   appState.settings.workspaceKey = elements.workspaceKeyInput.value.trim();
-  appState.settings.defaultNoteIcons = sanitizeIcons(appState.settings.defaultNoteIcons);
-  appState.settings.selectedNoteIcons = sanitizeIcons(appState.settings.selectedNoteIcons);
-
-  if (appState.settings.defaultNoteIcons.length === 0) {
-    appState.settings.defaultNoteIcons = [...DEFAULT_NOTE_ICONS];
-  }
-
-  if (appState.settings.selectedNoteIcons.length === 0) {
-    appState.settings.selectedNoteIcons = [...appState.settings.defaultNoteIcons];
-  }
+  appState.settings.defaultNoteIcons = elements.settingsNoteInput.value.trim() || DEFAULT_NOTE_TEXT;
 
   saveSettings();
   appState.supabaseClient = createSupabaseClient();
@@ -935,17 +1455,6 @@ function handleSettingsSave(event) {
 }
 
 function handleItemSettingsSave() {
-  appState.settings.defaultNoteIcons = sanitizeIcons(appState.settings.defaultNoteIcons);
-  appState.settings.selectedNoteIcons = sanitizeIcons(appState.settings.selectedNoteIcons);
-
-  if (appState.settings.defaultNoteIcons.length === 0) {
-    appState.settings.defaultNoteIcons = [...DEFAULT_NOTE_ICONS];
-  }
-
-  if (appState.settings.selectedNoteIcons.length === 0) {
-    appState.settings.selectedNoteIcons = [...appState.settings.defaultNoteIcons];
-  }
-
   saveSettings();
   renderAll();
   syncSettingsToCloud()
@@ -1037,12 +1546,14 @@ async function markOrderPaid() {
     tip: summary.tip,
     total: summary.total,
     note: summary.note,
+    userName: appState.session ? appState.session.displayName : null,
     itemCount: appState.cart.reduce((sum, item) => sum + item.quantity, 0),
     items: appState.cart.map((item) => ({
       name: item.name,
       price: item.price,
       quantity: item.quantity,
-      lineTotal: roundMoney(item.price * item.quantity)
+      lineTotal: roundMoney(item.price * item.quantity),
+      addedBy: item.addedBy || null
     }))
   };
 
@@ -1064,7 +1575,7 @@ function resetOrder(showSuccessMessage = true) {
   appState.tipSelection = "none";
   appState.customTipAmount = 0;
   appState.screen = "host";
-  appState.settings.selectedNoteIcons = [...appState.settings.defaultNoteIcons];
+  appState.noteText = null;
   persistCart();
   saveSettings();
   renderAll();
@@ -1101,7 +1612,10 @@ function getTipAmount() {
 }
 
 function getCurrentNote() {
-  return sanitizeIcons(appState.settings.selectedNoteIcons).join("");
+  if (typeof appState.noteText === "string") {
+    return appState.noteText;
+  }
+  return appState.settings.defaultNoteIcons;
 }
 
 function getOrderSummary() {
@@ -1173,17 +1687,18 @@ function renderPaymentQr() {
   elements.qrCode.classList.toggle("hidden", !isVenmo);
   elements.venmoQrLogo.classList.toggle("hidden", !isVenmo);
   elements.zelleQrWrap.classList.toggle("hidden", isVenmo);
+  elements.zelleQrImage.classList.toggle("hidden", isVenmo);
   elements.zelleAmountDisplay.classList.toggle("hidden", false);
   elements.qrSummaryStack.classList.toggle("hidden", true);
   elements.qrNoteSummaryRow.classList.toggle("hidden", true);
-  elements.qrNoteSection.classList.toggle("hidden", true);
+  elements.qrNoteSection.classList.toggle("hidden", !isVenmo);
   elements.venmoUrlField.classList.toggle("hidden", true);
   elements.openVenmoButton.classList.toggle("hidden", true);
   elements.qrHelpTertiary.classList.toggle("hidden", isVenmo);
   elements.venmoScanSteps.classList.toggle("hidden", !isVenmo);
 
   if (isVenmo) {
-    elements.qrHelpPrimary.innerHTML = 'Use your <span class="qr-help-accent">camera app</span> to scan the QR code.';
+    elements.qrHelpPrimary.innerHTML = 'Use your <span class="qr-help-accent">camera app</span> to scan the QR&nbsp;code.';
     setElementText(elements.qrHelpSecondary, "The Camera app will open a Venmo link for you.");
     setElementText(elements.qrHelpTertiary, "");
     renderQrCode(venmoUrl);
@@ -1330,8 +1845,7 @@ function getDefaultSettings() {
     supabaseKey: DEFAULT_SUPABASE_KEY,
     workspaceKey: DEFAULT_WORKSPACE_KEY,
     presetItems: DEFAULT_PRESET_ITEMS.map(cloneItem),
-    defaultNoteIcons: [...DEFAULT_NOTE_ICONS],
-    selectedNoteIcons: [...DEFAULT_NOTE_ICONS]
+    defaultNoteIcons: DEFAULT_NOTE_TEXT
   };
 }
 
@@ -1359,6 +1873,245 @@ function createSupabaseClient() {
   } catch (error) {
     return null;
   }
+}
+
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveSession(session) {
+  appState.session = session;
+  try {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+  } catch (error) {
+    // Ignore storage failures (e.g. private browsing).
+  }
+}
+
+function clearSession() {
+  appState.session = null;
+  try {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch (error) {
+    // Ignore storage failures.
+  }
+}
+
+function renderUserPanel() {
+  if (!appState.session) {
+    return;
+  }
+  const suffix = appState.session.type === "admin" ? " (Admin)" : "";
+  setElementText(elements.userPanelName, `${appState.session.displayName}${suffix}`);
+}
+
+function renderLoginState() {
+  const loggedIn = Boolean(appState.session);
+  const showGate = !loggedIn || appState.pendingSwitch;
+  elements.loginGate.classList.toggle("hidden", !showGate);
+  elements.loginCloseButton.classList.toggle("hidden", !appState.pendingSwitch);
+  elements.currentUserBadge.classList.toggle("hidden", !loggedIn);
+  updateScreen();
+
+  if (loggedIn) {
+    const suffix = appState.session.type === "admin" ? " (Admin)" : "";
+    setElementText(elements.currentUserBadge, `${appState.session.displayName}${suffix}`);
+  }
+
+  if (showGate) {
+    setLoginMode("name");
+    populateLoginUserSelect();
+  }
+}
+
+function handleLoginClose() {
+  appState.pendingSwitch = false;
+  renderLoginState();
+}
+
+function setLoginError(message) {
+  elements.loginError.textContent = message || "";
+  elements.loginError.classList.toggle("hidden", !message);
+}
+
+function setLoginMode(mode) {
+  appState.loginMode = mode;
+  elements.loginNameView.classList.toggle("hidden", mode !== "name");
+  elements.loginAdminView.classList.toggle("hidden", mode !== "admin");
+  setLoginError("");
+}
+
+function setLoginBusy(busy) {
+  appState.loginBusy = busy;
+  [elements.loginContinueButton, elements.loginCreateButton, elements.loginAdminSubmit].forEach((button) => {
+    button.disabled = busy;
+  });
+}
+
+async function populateLoginUserSelect() {
+  if (!appState.supabaseClient) {
+    return;
+  }
+
+  const { data, error } = await appState.supabaseClient
+    .from("app_users")
+    .select("id, first_name, last_name")
+    .order("first_name", { ascending: true });
+
+  if (error || !Array.isArray(data)) {
+    return;
+  }
+
+  const previousValue = elements.loginUserSelect.value;
+  elements.loginUserSelect.innerHTML = '<option value="">Select your name…</option>';
+  data.forEach((user) => {
+    const option = document.createElement("option");
+    option.value = user.id;
+    option.textContent = `${user.first_name} ${user.last_name}`;
+    option.dataset.firstName = user.first_name;
+    option.dataset.lastName = user.last_name;
+    elements.loginUserSelect.appendChild(option);
+  });
+  elements.loginUserSelect.value = previousValue;
+}
+
+function handleLoginUserSelectChange() {
+  elements.loginContinueButton.disabled = !elements.loginUserSelect.value;
+}
+
+function handleLoginContinue() {
+  const option = elements.loginUserSelect.selectedOptions[0];
+  if (!option || !option.value) {
+    return;
+  }
+
+  loginAsUser({
+    id: option.value,
+    firstName: option.dataset.firstName,
+    lastName: option.dataset.lastName
+  });
+}
+
+async function handleLoginCreateUser() {
+  const firstName = elements.loginFirstName.value.trim();
+  const lastName = elements.loginLastName.value.trim();
+
+  if (!firstName || !lastName) {
+    setLoginError("Enter a first and last name.");
+    return;
+  }
+
+  if (!appState.supabaseClient) {
+    setLoginError("Cloud sync isn't configured, so new users can't be saved.");
+    return;
+  }
+
+  setLoginBusy(true);
+  const { data, error } = await appState.supabaseClient
+    .from("app_users")
+    .insert({ first_name: firstName, last_name: lastName })
+    .select("id, first_name, last_name")
+    .single();
+  setLoginBusy(false);
+
+  if (error || !data) {
+    setLoginError("Couldn't create that user. Try again.");
+    return;
+  }
+
+  loginAsUser({ id: data.id, firstName: data.first_name, lastName: data.last_name });
+}
+
+function loginAsUser({ id, firstName, lastName }) {
+  appState.pendingSwitch = false;
+  appState.adminTab = "user";
+  saveSession({
+    type: "user",
+    id,
+    firstName,
+    lastName,
+    displayName: `${firstName} ${lastName}`
+  });
+  renderLoginState();
+  loadUserItemOrder();
+}
+
+async function handleLoginAdminSubmit() {
+  const email = elements.loginAdminEmail.value.trim();
+  const password = elements.loginAdminPassword.value;
+
+  if (!email || !password) {
+    setLoginError("Enter an email and password.");
+    return;
+  }
+
+  if (!appState.supabaseClient) {
+    setLoginError("Cloud sync isn't configured.");
+    return;
+  }
+
+  setLoginBusy(true);
+  const { data, error } = await appState.supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (error || !data?.user) {
+    setLoginBusy(false);
+    setLoginError("Incorrect email or password.");
+    return;
+  }
+
+  const { data: profile, error: profileError } = await appState.supabaseClient
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", data.user.id)
+    .single();
+  setLoginBusy(false);
+
+  if (profileError || !profile?.is_admin) {
+    setLoginError("This account doesn't have admin access.");
+    return;
+  }
+
+  appState.pendingSwitch = false;
+  appState.adminTab = "items";
+  saveSession({
+    type: "admin",
+    id: data.user.id,
+    email,
+    displayName: email
+  });
+  renderLoginState();
+  loadUserItemOrder();
+}
+
+function handleSwitchUser() {
+  appState.pendingSwitch = true;
+  elements.loginAdminEmail.value = "";
+  elements.loginAdminPassword.value = "";
+  elements.loginFirstName.value = "";
+  elements.loginLastName.value = "";
+  elements.loginNewUserFields.classList.add("hidden");
+  elements.loginContinueButton.disabled = true;
+  renderLoginState();
+}
+
+function handleLogOut() {
+  clearSession();
+  appState.pendingSwitch = false;
+  appState.userItemOrder = [];
+  renderPresetItems();
+  elements.loginAdminEmail.value = "";
+  elements.loginAdminPassword.value = "";
+  elements.loginFirstName.value = "";
+  elements.loginLastName.value = "";
+  elements.loginNewUserFields.classList.add("hidden");
+  elements.loginContinueButton.disabled = true;
+  appState.hostAdminOpen = false;
+  renderLoginState();
 }
 
 function hasCloudConfig() {
@@ -1409,8 +2162,7 @@ async function syncSettingsToCloud() {
     settings_json: {
       venmoUsername: appState.settings.venmoUsername,
       presetItems: appState.settings.presetItems,
-      defaultNoteIcons: appState.settings.defaultNoteIcons,
-      selectedNoteIcons: appState.settings.selectedNoteIcons
+      defaultNoteIcons: appState.settings.defaultNoteIcons
     },
     updated_at: new Date().toISOString()
   };
@@ -1446,7 +2198,8 @@ async function sendSaleToCloud(order) {
         note: order.note,
         item_count: order.itemCount,
         items_json: order.items,
-        created_at: order.timestamp
+        created_at: order.timestamp,
+        user_name: order.userName || null
       });
     if (error) {
       throw error;
@@ -1476,7 +2229,7 @@ async function refreshReportData(options = {}) {
   try {
     const { data, error } = await appState.supabaseClient
       .from("sales_events")
-      .select("order_id, sale_date, subtotal, tip, total, note, item_count, items_json, created_at")
+      .select("order_id, sale_date, subtotal, tip, total, note, item_count, items_json, created_at, user_name")
       .eq("workspace_key", appState.settings.workspaceKey)
       .eq("sale_date", appState.reportFilterDate)
       .order("created_at", { ascending: false });
@@ -1492,6 +2245,7 @@ async function refreshReportData(options = {}) {
       tip: Number(row.tip) || 0,
       total: Number(row.total) || 0,
       note: row.note || "",
+      userName: row.user_name || "",
       itemCount: Number(row.item_count) || 0,
       items: Array.isArray(row.items_json) ? row.items_json : []
     }));
@@ -1528,16 +2282,16 @@ function normalizeSettings(settings) {
           .map((item) => ({
             id: item.id || createId(),
             name: String(item.name || "").trim(),
-            price: roundMoney(Number(item.price))
+            price: roundMoney(Number(item.price)),
+            variants: sanitizeVariants(item.variants)
           }))
           .filter((item) => item.name && item.price > 0)
       : DEFAULT_PRESET_ITEMS.map(cloneItem),
-    defaultNoteIcons: sanitizeIcons(settings.defaultNoteIcons).length
-      ? sanitizeIcons(settings.defaultNoteIcons)
-      : [...DEFAULT_NOTE_ICONS],
-    selectedNoteIcons: sanitizeIcons(settings.selectedNoteIcons).length
-      ? sanitizeIcons(settings.selectedNoteIcons)
-      : [...DEFAULT_NOTE_ICONS]
+    defaultNoteIcons: typeof settings.defaultNoteIcons === "string" && settings.defaultNoteIcons.trim()
+      ? settings.defaultNoteIcons.trim()
+      : Array.isArray(settings.defaultNoteIcons) && sanitizeIcons(settings.defaultNoteIcons).length
+        ? sanitizeIcons(settings.defaultNoteIcons).join("")
+        : DEFAULT_NOTE_TEXT
   };
 }
 
@@ -1545,6 +2299,33 @@ function sanitizeIcons(icons) {
   return Array.isArray(icons)
     ? ALLOWED_NOTE_ICONS.filter((icon) => icons.includes(icon))
     : [];
+}
+
+function sanitizeVariants(variants) {
+  if (!Array.isArray(variants)) {
+    return [];
+  }
+  const seen = new Set();
+  const result = [];
+  variants.forEach((entry) => {
+    const isLegacyString = typeof entry === "string";
+    const name = String(isLegacyString ? entry : entry?.name || "").trim();
+    if (!name) {
+      return;
+    }
+    const key = name.toLowerCase();
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    const rawPrice = isLegacyString ? "" : entry?.price;
+    const parsedPrice = Number.parseFloat(rawPrice);
+    const price = rawPrice === "" || rawPrice === null || rawPrice === undefined || !Number.isFinite(parsedPrice) || parsedPrice <= 0
+      ? null
+      : roundMoney(parsedPrice);
+    result.push({ name, price });
+  });
+  return result.slice(0, 12);
 }
 
 function tipDescription(option) {
@@ -1623,7 +2404,8 @@ function cloneItem(item) {
   return {
     id: createId(),
     name: item.name,
-    price: item.price
+    price: item.price,
+    variants: Array.isArray(item.variants) ? [...item.variants] : []
   };
 }
 
