@@ -2067,12 +2067,21 @@ select option {
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 8px 16px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
   background: #f5a623;
   color: #10131b;
   font-weight: 700;
   font-size: 0.85rem;
   text-align: center;
+}
+
+body:has(.demo-banner) .app-shell {
+  height: calc(100svh - 34px);
+  min-height: calc(100svh - 34px);
 }
 
 button:active,
