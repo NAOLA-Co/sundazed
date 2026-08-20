@@ -2148,12 +2148,13 @@ a[aria-disabled="true"] {
     box-shadow: none;
   }
 
-  .guest-summary-panel {
-    border-top: 1px solid var(--panel-border);
-  }
-
   .guest-summary-subtotal-row {
     display: none;
+  }
+
+  .guest-items-footer .guest-subtotal-row {
+    border-bottom: 0;
+    padding-bottom: 0;
   }
 
   .single-row-tip-grid {
