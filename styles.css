@@ -2157,6 +2157,14 @@ a[aria-disabled="true"] {
     padding-bottom: 0;
   }
 
+  .guest-summary-heading {
+    display: none;
+  }
+
+  .guest-summary-body {
+    margin-top: 8px;
+  }
+
   .single-row-tip-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 6px;
