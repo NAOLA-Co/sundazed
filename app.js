@@ -135,6 +135,8 @@ const elements = {
   reportTips: document.getElementById("reportTips"),
   reportDateFilter: document.getElementById("reportDateFilter"),
   reportTodayButton: document.getElementById("reportTodayButton"),
+  reportRefreshButton: document.getElementById("reportRefreshButton"),
+  reportPullIndicator: document.getElementById("reportPullIndicator"),
   reportTopItems: document.getElementById("reportTopItems"),
   reportRecentOrders: document.getElementById("reportRecentOrders"),
   clearReportButton: document.getElementById("clearReportButton"),
@@ -169,7 +171,6 @@ const elements = {
   venmoUrlOutput: document.getElementById("venmoUrlOutput"),
   openVenmoButton: document.getElementById("openVenmoButton"),
   markPaidButton: document.getElementById("markPaidButton"),
-  newOrderButton: document.getElementById("newOrderButton"),
   messageBanner: document.getElementById("messageBanner"),
   settingsForm: document.getElementById("settingsForm"),
   venmoUsernameInput: document.getElementById("venmoUsernameInput"),
@@ -269,7 +270,6 @@ function bindEvents() {
   window.addEventListener("resize", resizeNoteInput);
   elements.clearCartButton.addEventListener("click", clearCart);
   elements.markPaidButton.addEventListener("click", markOrderPaid);
-  elements.newOrderButton.addEventListener("click", resetOrder);
   elements.settingsToggle.addEventListener("click", toggleSettings);
   elements.userTabButton.addEventListener("click", () => switchAdminTab("user"));
   elements.userPanelLogoutButton.addEventListener("click", handleLogOut);
@@ -300,7 +300,9 @@ function bindEvents() {
   elements.advancedTabButton.addEventListener("click", () => switchAdminTab("advanced"));
   elements.reportDateFilter.addEventListener("change", handleReportDateChange);
   elements.reportTodayButton.addEventListener("click", setReportDateToToday);
+  elements.reportRefreshButton.addEventListener("click", handleReportRefreshClick);
   elements.clearReportButton.addEventListener("click", clearReport);
+  attachReportPullToRefresh();
   elements.saveItemsButton.addEventListener("click", handleItemSettingsSave);
   elements.settingsForm.addEventListener("submit", handleSettingsSave);
   elements.resetDefaultsButton.addEventListener("click", resetDefaultSettings);
@@ -972,6 +974,79 @@ function setReportDateToToday() {
   refreshReportData();
 }
 
+async function handleReportRefreshClick() {
+  elements.reportRefreshButton.disabled = true;
+  elements.reportRefreshButton.classList.add("refreshing");
+  await refreshReportData();
+  elements.reportRefreshButton.disabled = false;
+  elements.reportRefreshButton.classList.remove("refreshing");
+}
+
+const REPORT_PULL_TRIGGER_PX = 70;
+const REPORT_PULL_MAX_PX = 110;
+
+function attachReportPullToRefresh() {
+  const scrollHost = elements.hostAdminView;
+  let startY = null;
+  let pulling = false;
+  let refreshing = false;
+
+  scrollHost.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" || appState.adminTab !== "report" || refreshing) {
+      return;
+    }
+    if (scrollHost.scrollTop > 0) {
+      return;
+    }
+    startY = event.clientY;
+    pulling = true;
+  });
+
+  scrollHost.addEventListener("pointermove", (event) => {
+    if (!pulling || startY === null) {
+      return;
+    }
+    const distance = event.clientY - startY;
+    if (distance <= 0 || scrollHost.scrollTop > 0) {
+      pulling = false;
+      startY = null;
+      elements.reportPullIndicator.classList.add("hidden");
+      elements.reportPullIndicator.classList.remove("ready");
+      return;
+    }
+    const pullDistance = Math.min(distance, REPORT_PULL_MAX_PX);
+    elements.reportPullIndicator.classList.remove("hidden");
+    elements.reportPullIndicator.classList.toggle("ready", pullDistance >= REPORT_PULL_TRIGGER_PX);
+    elements.reportPullIndicator.textContent = pullDistance >= REPORT_PULL_TRIGGER_PX
+      ? "Release to refresh"
+      : "Pull to refresh";
+  });
+
+  const endPull = async (event) => {
+    if (!pulling) {
+      return;
+    }
+    const distance = startY === null ? 0 : event.clientY - startY;
+    pulling = false;
+    startY = null;
+
+    if (distance >= REPORT_PULL_TRIGGER_PX) {
+      refreshing = true;
+      elements.reportPullIndicator.classList.remove("hidden");
+      elements.reportPullIndicator.classList.add("ready");
+      elements.reportPullIndicator.textContent = "Refreshing…";
+      await refreshReportData();
+      refreshing = false;
+    }
+
+    elements.reportPullIndicator.classList.add("hidden");
+    elements.reportPullIndicator.classList.remove("ready");
+  };
+
+  scrollHost.addEventListener("pointerup", endPull);
+  scrollHost.addEventListener("pointercancel", endPull);
+}
+
 function updateScreen() {
   elements.mainContent.classList.toggle("main-host-mode", appState.screen === "host");
   elements.mainContent.classList.toggle("main-guest-mode", appState.screen === "guest");
@@ -982,7 +1057,6 @@ function updateScreen() {
   elements.settingsToggle.classList.toggle("hidden", appState.screen !== "host" || !appState.session);
   elements.stepBackButton.classList.toggle("hidden", appState.screen === "host");
   elements.markPaidButton.classList.toggle("hidden", appState.screen !== "qr");
-  elements.newOrderButton.classList.toggle("hidden", appState.screen !== "qr");
   elements.hostComposerView.classList.toggle("hidden", appState.screen !== "host" || appState.hostAdminOpen);
   elements.hostAdminView.classList.toggle("hidden", appState.screen !== "host" || !appState.hostAdminOpen);
   const isAdmin = Boolean(appState.session && appState.session.type === "admin");

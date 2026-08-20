@@ -77,7 +77,6 @@
         <span id="currentUserBadge" class="current-user-badge hidden"></span>
         <button id="stepBackButton" class="ghost-button hidden" type="button">Back</button>
         <button id="markPaidButton" class="icon-button hidden" type="button" aria-label="Mark payment received">✓</button>
-        <button id="newOrderButton" class="icon-button hidden" type="button" aria-label="Start new order">＋</button>
         <button id="settingsToggle" class="icon-button settings-icon-button hidden" type="button" aria-label="Open settings">⚙️</button>
       </div>
     </header>
@@ -164,7 +163,9 @@
                 <input id="reportDateFilter" type="date">
               </label>
               <button id="reportTodayButton" class="ghost-button small-ghost-button" type="button">Today</button>
+              <button id="reportRefreshButton" class="ghost-button small-ghost-button" type="button" aria-label="Refresh sales report">⟳ Refresh</button>
             </div>
+            <div id="reportPullIndicator" class="report-pull-indicator hidden">Pull to refresh</div>
             <div class="report-grid">
               <div class="report-card">
                 <span>Total Sales</span>

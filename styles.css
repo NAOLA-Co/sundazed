@@ -1320,6 +1320,36 @@ select option {
   padding: 12px 14px;
 }
 
+#reportRefreshButton {
+  white-space: nowrap;
+}
+
+#reportRefreshButton.refreshing {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.report-pull-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0;
+  overflow: hidden;
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
+  transition: height 0.15s ease;
+}
+
+.report-pull-indicator:not(.hidden) {
+  height: 36px;
+  margin-bottom: 8px;
+}
+
+.report-pull-indicator.ready {
+  color: var(--color-accent, #5ec8ff);
+}
+
 .report-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 16px;
