@@ -2156,13 +2156,28 @@ a[aria-disabled="true"] {
     display: none;
   }
 
+  .single-row-tip-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+
   .single-row-tip-grid .tip-button {
-    min-height: 92px;
-    padding: 14px;
+    min-height: 76px;
+    padding: 8px 4px;
   }
 
   .single-row-tip-grid .tip-button .tip-button-label {
-    font-size: clamp(1.05rem, 3vw, 1.5rem);
+    font-size: clamp(0.72rem, 3.2vw, 1.2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .single-row-tip-grid .tip-button .tip-button-amount {
+    font-size: 0.72em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .guest-payment-method-card {
@@ -2299,7 +2314,4 @@ a[aria-disabled="true"] {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .tip-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
