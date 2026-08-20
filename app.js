@@ -1,14 +1,16 @@
+const IS_DEMO = window.SUNDAZED_DEMO === true;
+const STORAGE_PREFIX = IS_DEMO ? "party-pay-qr-demo-" : "party-pay-qr-";
 const STORAGE_KEYS = {
-  settings: "party-pay-qr-settings",
-  cart: "party-pay-qr-cart",
-  report: "party-pay-qr-report"
+  settings: `${STORAGE_PREFIX}settings`,
+  cart: `${STORAGE_PREFIX}cart`,
+  report: `${STORAGE_PREFIX}report`
 };
 
 const ALLOWED_NOTE_ICONS = ["☀️", "🎉", "🍺", "🍸", "🥂"];
 const DEFAULT_NOTE_TEXT = "☀️🎉";
 const DEFAULT_SUPABASE_URL = "https://unpqtfqjxvbijigttdhc.supabase.co";
 const DEFAULT_SUPABASE_KEY = "sb_publishable_76GzVg3VQq-sgUjytYWsRg_qOBC3jPv";
-const DEFAULT_WORKSPACE_KEY = "sundazed-main";
+const DEFAULT_WORKSPACE_KEY = IS_DEMO ? "sundazed-demo" : "sundazed-main";
 const DEFAULT_PRESET_ITEMS = [
   { id: createId(), name: "Vodka Soda", price: 10, variants: [] },
   { id: createId(), name: "Tequila Soda", price: 10, variants: [] },
@@ -81,7 +83,7 @@ const appState = {
   userItemOrder: []
 };
 
-const SESSION_STORAGE_KEY = "party-pay-qr-session";
+const SESSION_STORAGE_KEY = `${STORAGE_PREFIX}session`;
 
 const elements = {
   hostScreen: document.getElementById("hostScreen"),
@@ -219,14 +221,18 @@ const elements = {
 function init() {
   appState.cart = loadCart();
   appState.supabaseClient = createSupabaseClient();
-  appState.session = loadSession();
+  appState.session = IS_DEMO
+    ? { type: "admin", id: "demo-admin", displayName: "Demo Host" }
+    : loadSession();
   bindEvents();
   renderAll();
   renderLoginState();
-  if (appState.session) {
+  if (appState.session && !IS_DEMO) {
     loadUserItemOrder();
   }
-  registerServiceWorker();
+  if (!IS_DEMO) {
+    registerServiceWorker();
+  }
   syncFromCloudOnLoad().finally(() => {
     refreshReportData();
   });
@@ -373,7 +379,7 @@ async function loadUserItemOrder() {
 }
 
 async function saveUserItemOrder() {
-  if (!appState.session || !appState.supabaseClient) {
+  if (IS_DEMO || !appState.session || !appState.supabaseClient) {
     return;
   }
 
@@ -2163,6 +2169,10 @@ async function handleLoginAdminSubmit() {
 }
 
 function handleSwitchUser() {
+  if (IS_DEMO) {
+    showMessage("Switching users is disabled in demo mode.");
+    return;
+  }
   appState.pendingSwitch = true;
   elements.loginAdminEmail.value = "";
   elements.loginAdminPassword.value = "";
@@ -2174,6 +2184,10 @@ function handleSwitchUser() {
 }
 
 function handleLogOut() {
+  if (IS_DEMO) {
+    showMessage("Log out is disabled in demo mode.");
+    return;
+  }
   clearSession();
   appState.pendingSwitch = false;
   appState.userItemOrder = [];
