@@ -1,4 +1,4 @@
-const CACHE_NAME = "party-pay-qr-v3";
+const CACHE_NAME = "party-pay-qr-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -46,6 +46,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
+    return;
+  }
+
+  if (new URL(event.request.url).origin !== self.location.origin) {
     return;
   }
 
