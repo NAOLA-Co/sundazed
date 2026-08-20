@@ -1796,10 +1796,10 @@ async function clearReport() {
   }
 
   appState.report = {
-    orders: appState.report.orders.filter((order) => order.timestamp.slice(0, 10) !== appState.reportFilterDate)
+    orders: appState.report.orders.filter((order) => getLocalDateKey(order.timestamp) !== appState.reportFilterDate)
   };
   const localReport = loadReport();
-  localReport.orders = localReport.orders.filter((order) => String(order.timestamp || "").slice(0, 10) !== appState.reportFilterDate);
+  localReport.orders = localReport.orders.filter((order) => getLocalDateKey(order.timestamp) !== appState.reportFilterDate);
   window.localStorage.setItem(STORAGE_KEYS.report, JSON.stringify(localReport));
   await refreshReportData({ silent: true });
   showMessage(`Sales cleared for ${label}.`, true);
@@ -2183,7 +2183,7 @@ async function sendSaleToCloud(order) {
     return false;
   }
 
-  const saleDate = order.timestamp.slice(0, 10);
+  const saleDate = getLocalDateKey(order.timestamp);
 
   try {
     const { error } = await appState.supabaseClient
@@ -2260,7 +2260,7 @@ async function refreshReportData(options = {}) {
 
 function getLocalOrdersForDate(dateString) {
   const local = loadReport().orders;
-  return local.filter((order) => String(order.timestamp || "").slice(0, 10) === dateString);
+  return local.filter((order) => getLocalDateKey(order.timestamp) === dateString);
 }
 
 function normalizeSettings(settings) {
@@ -2388,12 +2388,23 @@ function formatReportDay(value) {
   }).format(new Date(year, month - 1, day));
 }
 
-function getTodayDateString() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+function formatLocalDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function getLocalDateKey(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return formatLocalDateString(date);
+}
+
+function getTodayDateString() {
+  return formatLocalDateString(new Date());
 }
 
 function createId() {
