@@ -1003,12 +1003,12 @@ select option {
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
   justify-self: stretch;
   background: #ffffff;
   border-radius: 28px;
-  padding: 18px 24px 26px;
+  padding: 14px 24px 20px;
   box-shadow: 0 22px 46px rgba(0, 0, 0, 0.35);
   box-sizing: border-box;
 }
@@ -1106,17 +1106,18 @@ select option {
   display: grid;
   justify-items: center;
   gap: 8px;
+  margin: -2px 0;
 }
 
 .qr-note-input {
   width: 260px;
   max-width: 100%;
-  padding: 10px 14px;
+  padding: 4px 14px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(11, 14, 19, 0.15);
   background: rgba(11, 14, 19, 0.04);
   color: #0b0e13;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   text-align: center;
 }
 
