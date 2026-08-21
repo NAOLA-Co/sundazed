@@ -1003,11 +1003,14 @@ select option {
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 14px;
+  gap: 6px;
+  width: 100%;
+  justify-self: stretch;
   background: #ffffff;
   border-radius: 28px;
   padding: 18px 24px 26px;
   box-shadow: 0 22px 46px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
 }
 
 .qr-amount-block {
@@ -1027,6 +1030,7 @@ select option {
   display: flex;
   justify-content: center;
   padding: 14px;
+  margin-top: 8px;
   border-radius: 20px;
   border: 1px solid rgba(11, 14, 19, 0.1);
   background: #ffffff;
@@ -1045,16 +1049,16 @@ select option {
 
 .qr-code img,
 .qr-code canvas {
-  width: 260px;
-  height: 260px;
+  width: 234px;
+  height: 234px;
   max-width: 100%;
   object-fit: contain;
 }
 
 .zelle-qr-code {
   display: block;
-  width: 260px;
-  height: 260px;
+  width: 234px;
+  height: 234px;
   margin: 0 auto;
   object-fit: contain;
   max-width: 100%;
@@ -1062,8 +1066,8 @@ select option {
 
 .zelle-qr-logo {
   display: block;
-  width: min(100%, 210px);
-  max-height: 68px;
+  width: min(100%, 260px);
+  max-height: 84px;
   margin: 0 auto;
   object-fit: contain;
   background: transparent;
@@ -1072,8 +1076,8 @@ select option {
 }
 
 #venmoQrLogo {
-  width: min(100%, 210px);
-  max-height: 68px;
+  width: min(100%, 260px);
+  max-height: 84px;
 }
 
 .qr-static {
