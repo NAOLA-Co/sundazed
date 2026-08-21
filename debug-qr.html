@@ -1,0 +1,539 @@
+<!-- Demo build: copy of index.html with window.SUNDAZED_DEMO set. Keep in sync with index.html by hand. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#10131b">
+  <title>Sundazed (Demo)</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script>window.SUNDAZED_DEMO = true;</script>
+</head>
+<body>
+  <div class="demo-banner">DEMO MODE — test data only, not the real event</div>
+  <div id="loginGate" class="login-gate hidden" role="dialog" aria-modal="true" aria-labelledby="loginGateTitle">
+    <div class="login-card">
+      <div class="login-card-header">
+        <h1 id="loginGateTitle" class="login-logo">
+          <img src="sundazed_logo_white.png" alt="Sundazed">
+        </h1>
+        <button id="loginCloseButton" class="icon-button login-close-button hidden" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div id="loginNameView" class="login-view">
+        <label>
+          <span>Who's this?</span>
+          <select id="loginUserSelect">
+            <option value="">Select your name…</option>
+          </select>
+        </label>
+        <button id="loginContinueButton" class="primary-button" type="button" disabled>Continue</button>
+
+        <button id="loginNewUserToggle" class="ghost-button" type="button">+ New user</button>
+
+        <div id="loginNewUserFields" class="login-new-user-fields hidden">
+          <label>
+            <span>First Name</span>
+            <input id="loginFirstName" type="text" maxlength="30" placeholder="Jamie">
+          </label>
+          <label>
+            <span>Last Name</span>
+            <input id="loginLastName" type="text" maxlength="30" placeholder="Rivera">
+          </label>
+          <button id="loginCreateButton" class="primary-button" type="button">Create &amp; Continue</button>
+        </div>
+
+        <button id="loginAdminToggle" class="login-admin-link" type="button">Admin sign in</button>
+      </div>
+
+      <div id="loginAdminView" class="login-view hidden">
+        <label>
+          <span>Email</span>
+          <input id="loginAdminEmail" type="email" autocomplete="username">
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="loginAdminPassword" type="password" autocomplete="current-password">
+        </label>
+        <button id="loginAdminSubmit" class="primary-button" type="button">Sign In</button>
+        <button id="loginAdminBack" class="ghost-button" type="button">Back</button>
+      </div>
+
+      <p id="loginError" class="login-error hidden"></p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1 class="logo-wordmark">
+          <img src="sundazed_logo_white.png" alt="Sundazed">
+        </h1>
+      </div>
+      <div class="topbar-actions">
+        <span id="currentUserBadge" class="current-user-badge hidden"></span>
+        <button id="stepBackButton" class="ghost-button hidden" type="button">Back</button>
+        <button id="markPaidButton" class="icon-button hidden" type="button" aria-label="Mark payment received">✓</button>
+        <button id="settingsToggle" class="icon-button settings-icon-button hidden" type="button" aria-label="Open settings">⚙️</button>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <section id="messageBanner" class="message hidden" aria-live="polite"></section>
+
+      <section id="hostScreen" class="screen screen-host">
+        <div id="hostComposerView" class="host-stack">
+          <section class="panel host-quick-add-panel">
+            <div class="panel-heading">
+              <h3>Menu</h3>
+              <button id="menuReorderDoneButton" class="ghost-button small-ghost-button hidden" type="button">Done</button>
+            </div>
+            <div id="presetItems" class="preset-grid"></div>
+          </section>
+
+          <section class="panel host-cart-panel">
+            <div class="panel-heading">
+              <h3>Cart</h3>
+              <button id="clearCartButton" class="ghost-button small-ghost-button" type="button">Clear Cart</button>
+            </div>
+            <div class="host-cart-body">
+              <div id="hostCartEmpty" class="empty-state">
+                <p>No items yet. Add a few drinks or snacks to start.</p>
+              </div>
+              <div id="hostCartList" class="cart-list"></div>
+            </div>
+            <div class="host-cart-footer">
+              <div class="summary-row host-subtotal-row">
+                <span>Subtotal</span>
+                <strong id="hostSubtotal">$0.00</strong>
+              </div>
+              <button id="handToGuestButton" class="primary-button" type="button">Hand to Guest</button>
+            </div>
+          </section>
+        </div>
+
+        <div id="hostAdminView" class="host-stack hidden">
+          <section class="panel admin-tabs-panel">
+            <div class="admin-tabs" role="tablist" aria-label="Admin sections">
+              <button id="userTabButton" class="tab-button selected" type="button" role="tab" aria-selected="true">User</button>
+              <button id="itemsTabButton" class="tab-button hidden" type="button" role="tab" aria-selected="false">Items</button>
+              <button id="reportTabButton" class="tab-button hidden" type="button" role="tab" aria-selected="false">Sales Report</button>
+              <button id="advancedTabButton" class="tab-button hidden" type="button" role="tab" aria-selected="false">Admin</button>
+            </div>
+          </section>
+
+          <section id="userPanel" class="panel settings-panel">
+            <section class="settings-category">
+              <div class="panel-heading category-heading">
+                <h3>User</h3>
+              </div>
+              <p class="user-panel-current">Logged in as <strong id="userPanelName">—</strong></p>
+              <div class="settings-actions">
+                <button id="userPanelLogoutButton" class="ghost-button" type="button">Log Out</button>
+                <button id="userPanelSwitchButton" class="ghost-button" type="button">Switch User</button>
+              </div>
+            </section>
+          </section>
+
+          <section id="itemsPanel" class="panel settings-panel hidden">
+            <section class="settings-category">
+              <div class="panel-heading category-heading">
+                <h3>Item List</h3>
+              </div>
+              <div id="settingsPresetList" class="settings-preset-list"></div>
+            </section>
+
+            <div class="settings-actions">
+              <button id="saveItemsButton" class="primary-button" type="button">Save Item Settings</button>
+              <button id="resetDefaultsButton" class="ghost-button" type="button">Reset Defaults</button>
+            </div>
+          </section>
+
+          <section id="reportPanel" class="panel hidden">
+            <div class="panel-heading">
+              <h3>Sales Report</h3>
+              <p>Live sales pulled from Supabase for the selected date.</p>
+            </div>
+            <div class="report-filter-bar">
+              <label class="report-date-field">
+                <span>Date</span>
+                <input id="reportDateFilter" type="date">
+              </label>
+              <button id="reportTodayButton" class="ghost-button small-ghost-button" type="button">Today</button>
+              <button id="reportRefreshButton" class="ghost-button small-ghost-button" type="button" aria-label="Refresh sales report">⟳ Refresh</button>
+            </div>
+            <div id="reportPullIndicator" class="report-pull-indicator hidden">Pull to refresh</div>
+            <div class="report-grid">
+              <div class="report-card">
+                <span>Total Sales</span>
+                <strong id="reportOrderCount">0</strong>
+              </div>
+              <div class="report-card">
+                <span>Total Collected</span>
+                <strong id="reportRevenue">$0.00</strong>
+              </div>
+              <div class="report-card">
+                <span>Subtotal Collected</span>
+                <strong id="reportSubtotal">$0.00</strong>
+              </div>
+              <div class="report-card">
+                <span>Total Tips</span>
+                <strong id="reportTips">$0.00</strong>
+              </div>
+            </div>
+            <div class="panel-heading compact-heading">
+              <h3>Top Items</h3>
+              <p>Most frequently logged items.</p>
+            </div>
+            <div id="reportTopItems" class="report-list"></div>
+            <div class="panel-heading compact-heading">
+              <h3>Recent Sales</h3>
+              <p>Latest marked-as-received sales for this date.</p>
+            </div>
+            <div id="reportRecentOrders" class="report-list"></div>
+            <button id="clearReportButton" class="ghost-button" type="button">Clear This Day</button>
+          </section>
+
+          <section id="advancedPanel" class="panel hidden">
+            <div class="panel-heading">
+              <h3>Admin</h3>
+              <p>Technical connection settings for Venmo and Supabase.</p>
+            </div>
+
+            <form id="settingsForm" class="settings-form" novalidate>
+              <section class="settings-category">
+                <div class="panel-heading category-heading">
+                  <h3>Venmo</h3>
+                </div>
+                <label>
+                  <span>Venmo Username</span>
+                  <input id="venmoUsernameInput" name="venmoUsername" type="text" maxlength="40" placeholder="captkamikaze">
+                </label>
+
+                <label>
+                  <span>Venmo Note</span>
+                  <input id="settingsNoteInput" type="text" maxlength="60" placeholder="e.g. ☀️🎉">
+                </label>
+              </section>
+
+              <section class="settings-category">
+                <div class="panel-heading category-heading">
+                  <h3>Supabase</h3>
+                </div>
+                <label>
+                  <span>Supabase URL</span>
+                  <input id="supabaseUrlInput" name="supabaseUrl" type="url" placeholder="https://YOUR-PROJECT.supabase.co">
+                </label>
+
+                <label>
+                  <span>Supabase Publishable Key</span>
+                  <input id="supabaseKeyInput" name="supabaseKey" type="text" placeholder="sb_publishable_...">
+                </label>
+
+                <label>
+                  <span>Workspace Key</span>
+                  <input id="workspaceKeyInput" name="workspaceKey" type="text" maxlength="60" placeholder="sundazed-main">
+                </label>
+              </section>
+
+              <div class="settings-actions">
+                <button class="primary-button" type="submit">Save Technical Settings</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="guestScreen" class="screen screen-guest hidden">
+        <div id="guestComposerView" class="host-stack">
+          <section class="panel guest-items-panel">
+            <div class="panel-heading">
+              <h3>Items</h3>
+            </div>
+            <div class="guest-items-body">
+              <div id="guestCartList" class="cart-list guest-cart-list"></div>
+            </div>
+            <div class="guest-items-footer">
+              <div class="summary-row guest-subtotal-row">
+                <span style="color:#778899 !important;">Subtotal</span>
+                <strong id="guestSubtotal" style="color:#778899 !important;">$0.00</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel guest-summary-panel">
+            <div class="guest-summary-top">
+              <div class="summary-row guest-subtotal-row guest-summary-subtotal-row">
+                <span>Subtotal</span>
+                <strong id="guestSubtotalEcho">$0.00</strong>
+              </div>
+              <div class="guest-summary-body">
+                <h4 class="guest-summary-heading">Tip</h4>
+                <div id="tipOptions" class="tip-grid single-row-tip-grid"></div>
+              </div>
+              <div class="summary-row guest-tip-row">
+                <span>Tip</span>
+                <strong id="guestTip">$0.00</strong>
+              </div>
+              <div class="summary-row final-total-row">
+                <span>Final Total</span>
+                <strong id="guestTotal">$0.00</strong>
+              </div>
+            </div>
+            <div class="guest-summary-footer">
+              <div class="guest-payment-method-grid">
+                <button id="venmoMethodButton" class="payment-method-card guest-payment-method-card" type="button" data-payment-method="venmo">
+                  <span class="guest-payment-label" aria-hidden="true">
+                    <span class="guest-payment-word guest-payment-word-pay">Pay</span>
+                    <span class="guest-payment-word guest-payment-word-with">with</span>
+                  </span>
+                  <img class="payment-method-logo" src="venmo_logo.svg" alt="Venmo">
+                </button>
+                <button id="zelleMethodButton" class="payment-method-card guest-payment-method-card" type="button" data-payment-method="zelle">
+                  <span class="guest-payment-label" aria-hidden="true">
+                    <span class="guest-payment-word guest-payment-word-pay">Pay</span>
+                    <span class="guest-payment-word guest-payment-word-with">with</span>
+                  </span>
+                  <img class="payment-method-logo" src="zelle_logo.svg" alt="Zelle">
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="paymentScreen" class="payment-stage hidden">
+        <div class="payment-stage-inner">
+          <div class="payment-method-grid"></div>
+        </div>
+      </section>
+
+      <section id="qrScreen" class="screen screen-qr hidden">
+        <section class="panel qr-panel">
+          <div id="qrSummaryStack" class="summary-stack total-stack">
+            <div class="summary-row total-row">
+              <span>Final Total</span>
+              <strong id="qrTotal">$0.00</strong>
+            </div>
+            <div class="summary-row">
+              <span>Payment</span>
+              <strong id="qrMethodName">Venmo</strong>
+            </div>
+            <div id="qrNoteSummaryRow" class="summary-row">
+              <span>Note</span>
+              <strong id="qrNotePreview">🍺🍸</strong>
+            </div>
+          </div>
+          <div class="qr-layout">
+            <section class="qr-card qr-instruction-card">
+              <p id="qrHelpPrimary" class="qr-help qr-help-primary">Scan this QR code and confirm payment in Venmo.</p>
+              <div id="venmoScanSteps" class="scan-steps hidden" aria-label="How to scan with your phone camera">
+                <div class="scan-step">
+                  <div class="scan-step-icon" aria-hidden="true">📷</div>
+                  <div class="scan-step-label">Open Camera</div>
+                </div>
+                <div class="scan-step-arrow" aria-hidden="true">→</div>
+                <div class="scan-step">
+                  <div class="scan-step-icon" aria-hidden="true">🔗</div>
+                  <div class="scan-step-label">Tap Link</div>
+                </div>
+                <div class="scan-step-arrow" aria-hidden="true">→</div>
+                <div class="scan-step">
+                  <div class="scan-step-icon" aria-hidden="true">💸</div>
+                  <div class="scan-step-label">Pay in Venmo</div>
+                </div>
+              </div>
+              <p id="qrHelpSecondary" class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
+              <p id="qrHelpTertiary" class="qr-help subtle hidden">Recipient name will show as CHRISTOPHER LEQUANG in Zelle.</p>
+            </section>
+
+            <section class="qr-card qr-payment-card">
+              <img id="venmoQrLogo" class="zelle-qr-logo hidden" src="venmo_logo.svg" alt="Venmo">
+              <div id="zelleQrWrap" class="qr-static hidden">
+                <img class="zelle-qr-logo" src="zelle_logo.svg" alt="Zelle">
+              </div>
+              <div class="qr-amount-block">
+                <span class="qr-amount-label">Amount Due</span>
+                <div id="zelleAmountDisplay" class="zelle-amount-display hidden">$0.00</div>
+              </div>
+              <div id="qrNoteSection" class="qr-note-section hidden">
+                <input id="qrNoteInput" type="text" class="qr-note-input" maxlength="60" placeholder="Add a note (optional)">
+              </div>
+              <div class="qr-scan-frame">
+                <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
+                <img id="zelleQrImage" class="zelle-qr-code hidden" src="zelle_qr.png" alt="Zelle QR code for Christopher Lequang">
+              </div>
+            </section>
+          </div>
+          <label id="venmoUrlField" class="url-field hidden">
+            <span>Venmo URL</span>
+            <textarea id="venmoUrlOutput" rows="3" readonly></textarea>
+          </label>
+          <div class="action-stack hidden">
+            <a id="openVenmoButton" class="primary-button" href="#" target="_blank" rel="noopener noreferrer">Open Venmo</a>
+          </div>
+        </section>
+      </section>
+
+      <div id="itemModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+        <div class="modal-card">
+          <div class="panel-heading">
+            <h3 id="itemModalTitle">Add Item</h3>
+            <p id="itemModalCopy">Enter the item name and price.</p>
+          </div>
+          <form id="itemModalForm" class="custom-item-form" novalidate>
+            <label>
+              <span>Name</span>
+              <input id="itemModalName" type="text" maxlength="30" placeholder="Late-night tacos">
+            </label>
+            <label>
+              <span>Price</span>
+              <input id="itemModalPrice" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="6.50">
+            </label>
+            <div id="itemModalVariantsField" class="hidden">
+              <span class="variant-rows-label">Sub-options (optional)</span>
+              <p class="variant-rows-hint">Leave price blank to use the base price above.</p>
+              <div id="itemModalVariantRows" class="variant-rows"></div>
+              <button type="button" id="itemModalAddVariantRow" class="ghost-button small-ghost-button add-variant-row-button">+ Add sub-option</button>
+            </div>
+            <div class="inline-actions">
+              <button id="itemModalSubmit" class="primary-button" type="submit">Add Item</button>
+              <button id="closeItemModalButton" class="ghost-button" type="button">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="editItemModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="editItemModalTitle">
+        <div class="modal-card">
+          <div class="panel-heading">
+            <h3 id="editItemModalTitle">Edit Item</h3>
+            <p>Update this menu item.</p>
+          </div>
+          <form id="editItemModalForm" class="custom-item-form" novalidate>
+            <label>
+              <span>Name</span>
+              <input id="editItemModalName" type="text" maxlength="30">
+            </label>
+            <label>
+              <span>Price</span>
+              <input id="editItemModalPrice" type="number" inputmode="decimal" min="0.01" step="0.01">
+            </label>
+            <div>
+              <span class="variant-rows-label">Sub-options (optional)</span>
+              <p class="variant-rows-hint">Leave price blank to use the base price above.</p>
+              <div id="editItemModalVariantRows" class="variant-rows"></div>
+              <button type="button" id="editItemModalAddVariantRow" class="ghost-button small-ghost-button add-variant-row-button">+ Add sub-option</button>
+            </div>
+            <div class="inline-actions">
+              <button id="editItemModalSubmit" class="primary-button" type="submit">Save Changes</button>
+              <button id="editItemModalDeleteButton" class="remove-button" type="button">Delete Item</button>
+              <button id="closeEditItemModalButton" class="ghost-button" type="button">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="variantModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="variantModalTitle">
+        <div class="modal-card">
+          <div class="panel-heading">
+            <h3 id="variantModalTitle">Choose an option</h3>
+            <p id="variantModalCopy">Pick one to add to the cart.</p>
+          </div>
+          <div id="variantModalGrid" class="preset-grid variant-grid"></div>
+          <div class="inline-actions">
+            <button id="closeVariantModalButton" class="ghost-button" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="confirmModal" class="modal-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+        <div class="modal-card confirm-modal-card">
+          <div class="confirm-modal-heading">
+            <h3 id="confirmModalTitle">Are you sure?</h3>
+            <p id="confirmModalMessage"></p>
+          </div>
+          <div class="inline-actions">
+            <button id="confirmModalConfirmButton" class="primary-button" type="button">Confirm</button>
+            <button id="confirmModalCancelButton" class="ghost-button" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tipModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tipModalTitle">
+        <div class="modal-card tip-modal-card">
+          <div class="panel-heading">
+            <h3 id="tipModalTitle">Custom Tip</h3>
+            <p>Enter the tip amount.</p>
+          </div>
+          <div class="tip-modal-display-wrap">
+            <div id="tipModalDisplay" class="tip-modal-display">$0.00</div>
+          </div>
+          <div id="tipNumpad" class="tip-numpad">
+            <button class="tip-key" type="button" data-tip-key="1">1</button>
+            <button class="tip-key" type="button" data-tip-key="2">2</button>
+            <button class="tip-key" type="button" data-tip-key="3">3</button>
+            <button class="tip-key" type="button" data-tip-key="4">4</button>
+            <button class="tip-key" type="button" data-tip-key="5">5</button>
+            <button class="tip-key" type="button" data-tip-key="6">6</button>
+            <button class="tip-key" type="button" data-tip-key="7">7</button>
+            <button class="tip-key" type="button" data-tip-key="8">8</button>
+            <button class="tip-key" type="button" data-tip-key="9">9</button>
+            <button class="tip-key tip-key-muted" type="button" data-tip-key="clear">Clear</button>
+            <button class="tip-key" type="button" data-tip-key="0">0</button>
+            <button class="tip-key tip-key-muted" type="button" data-tip-key="double-zero">.00</button>
+          </div>
+          <div class="inline-actions">
+            <button id="applyTipButton" class="primary-button" type="button">Apply Tip</button>
+            <button id="closeTipModalButton" class="ghost-button" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+
+  <script>
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        appState.cart = [
+          {id:'c1', name:'Yuzu Whiskey Sour', price:12, qty:1},
+          {id:'c2', name:'Tequila Soda', price:10, qty:1},
+          {id:'c3', name:'Vodka Soda', price:10, qty:1},
+          {id:'c4', name:'Whisky Diet', price:10, qty:1},
+          {id:'c5', name:'Shots - Tequila', price:6, qty:1},
+          {id:'c6', name:'Hard Seltzer', price:6, qty:1}
+        ];
+        goToGuestScreen();
+        choosePaymentMethod('venmo');
+        setTimeout(dumpLayout, 300);
+      }, 300);
+    });
+
+    function rectStr(el) {
+      if (!el) return 'MISSING';
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      return `top=${r.top.toFixed(0)} bottom=${r.bottom.toFixed(0)} h=${r.height.toFixed(0)} | display=${cs.display} align-items=${cs.alignItems} justify-content=${cs.justifyContent} height=${cs.height} overflow=${cs.overflow}`;
+    }
+
+    function dumpLayout() {
+      const ids = ['qrScreen'];
+      const classes = ['.qr-panel', '.qr-layout', '.qr-instruction-card', '.qr-payment-card'];
+      let lines = [];
+      lines.push('viewport=' + window.innerWidth + 'x' + window.innerHeight);
+      ids.forEach(id => lines.push('#' + id + ': ' + rectStr(document.getElementById(id))));
+      classes.forEach(sel => lines.push(sel + ': ' + rectStr(document.querySelector(sel))));
+
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;font:12px monospace;padding:8px;z-index:99999;white-space:pre-wrap;line-height:1.5;';
+      overlay.textContent = lines.join('\n');
+      document.body.appendChild(overlay);
+    }
+  </script>
+</body>
+</html>
