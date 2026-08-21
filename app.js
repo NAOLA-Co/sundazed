@@ -2435,8 +2435,12 @@ function showMessage(message, isSuccess = false) {
   }, 2600);
 }
 
+function isLocalDevHost() {
+  return /^(localhost|127\.|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(window.location.hostname);
+}
+
 function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator && !isLocalDevHost()) {
     navigator.serviceWorker.register("service-worker.js").catch(() => {
       // Ignore registration errors for local previews.
     });
