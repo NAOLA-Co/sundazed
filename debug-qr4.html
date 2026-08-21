@@ -1,17 +1,19 @@
-<!-- Demo build: copy of index.html with window.SUNDAZED_DEMO set. Keep in sync with index.html by hand. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#10131b">
-  <title>Sundazed (Demo)</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sundazed">
+  <title>Sundazed</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-512.png">
   <link rel="stylesheet" href="styles.css">
-  <script>window.SUNDAZED_DEMO = true;</script>
 </head>
 <body>
-  <div class="demo-banner">DEMO MODE — test data only, not the real event</div>
   <div id="loginGate" class="login-gate hidden" role="dialog" aria-modal="true" aria-labelledby="loginGateTitle">
     <div class="login-card">
       <div class="login-card-header">
@@ -512,7 +514,7 @@
       if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = '__dbg';
-        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;font:11px monospace;padding:6px;z-index:99999;white-space:pre-wrap;line-height:1.4;';
+        overlay.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:6px;z-index:99999;white-space:pre-wrap;line-height:1.4;';
         document.body.appendChild(overlay);
       }
       overlay.textContent = lines.join('\n');
