@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Resetting…</title></head>
+<body style="background:#0b0e13;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+  <p id="status">Clearing cache…</p>
+  <script>
+    Promise.all([
+      ("serviceWorker" in navigator)
+        ? navigator.serviceWorker.getRegistrations().then((rs) => Promise.all(rs.map((r) => r.unregister())))
+        : Promise.resolve(),
+      ("caches" in window)
+        ? caches.keys().then((ks) => Promise.all(ks.map((k) => caches.delete(k))))
+        : Promise.resolve()
+    ]).then(() => {
+      document.getElementById("status").textContent = "Done, reloading…";
+      location.href = "./?cb=" + Date.now();
+    }).catch((err) => {
+      document.getElementById("status").textContent = "Error: " + err;
+    });
+  </script>
+</body>
+</html>
