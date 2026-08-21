@@ -139,6 +139,7 @@ main.main-guest-mode {
 
 .screen-qr {
   align-self: stretch;
+  align-items: stretch;
   align-content: stretch;
   justify-self: stretch;
   height: 100%;
