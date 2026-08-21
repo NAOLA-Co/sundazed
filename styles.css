@@ -2332,4 +2332,38 @@ a[aria-disabled="true"] {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .single-row-tip-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .single-row-tip-grid .tip-button .tip-button-label {
+    font-size: clamp(0.7rem, 1.6vw, 1.05rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .single-row-tip-grid .tip-button .tip-button-amount {
+    font-size: 0.78em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .guest-payment-method-card {
+    min-height: 64px;
+    padding: 12px 16px;
+  }
+
+  .guest-payment-method-card .payment-method-logo {
+    max-height: 42px;
+  }
+
+  .guest-payment-label {
+    min-height: 1.1em;
+    margin-bottom: 0;
+    font-size: 1rem;
+  }
+
 }
