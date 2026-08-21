@@ -1009,35 +1009,35 @@ select option {
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 4px;
+  gap: 8px;
   width: 100%;
   justify-self: stretch;
   background: #ffffff;
   border-radius: 28px;
-  padding: 12px 24px 16px;
+  padding: 8px 24px 12px;
   box-shadow: 0 22px 46px rgba(0, 0, 0, 0.35);
   box-sizing: border-box;
 }
 
 .qr-amount-block {
   display: grid;
-  gap: 4px;
+  gap: 1px;
 }
 
 .qr-amount-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(11, 14, 19, 0.45);
+  color: rgba(11, 14, 19, 0.4);
 }
 
 .qr-scan-frame {
   display: flex;
   justify-content: center;
   padding: 10px;
-  border-radius: 20px;
-  border: 1px solid rgba(11, 14, 19, 0.1);
+  border-radius: 18px;
+  border: 1px solid rgba(11, 14, 19, 0.12);
   background: #ffffff;
 }
 
@@ -1116,12 +1116,12 @@ select option {
 .qr-note-input {
   width: 260px;
   max-width: 100%;
-  padding: 4px 14px;
+  padding: 2px 12px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(11, 14, 19, 0.15);
   background: rgba(11, 14, 19, 0.04);
   color: #0b0e13;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   text-align: center;
 }
 
