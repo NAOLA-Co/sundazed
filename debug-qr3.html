@@ -498,42 +498,28 @@
   <script src="app.js"></script>
 
   <script>
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        appState.cart = [
-          {id:'c1', name:'Yuzu Whiskey Sour', price:12, qty:1},
-          {id:'c2', name:'Tequila Soda', price:10, qty:1},
-          {id:'c3', name:'Vodka Soda', price:10, qty:1},
-          {id:'c4', name:'Whisky Diet', price:10, qty:1},
-          {id:'c5', name:'Shots - Tequila', price:6, qty:1},
-          {id:'c6', name:'Hard Seltzer', price:6, qty:1}
-        ];
-        goToGuestScreen();
-        choosePaymentMethod('venmo');
-        setTimeout(dumpLayout, 2500);
-      }, 1500);
-    });
-
     function rectStr(el) {
       if (!el) return 'MISSING';
       const r = el.getBoundingClientRect();
       const cs = getComputedStyle(el);
-      return `top=${r.top.toFixed(0)} bottom=${r.bottom.toFixed(0)} h=${r.height.toFixed(0)} | display=${cs.display} align-items=${cs.alignItems} justify-content=${cs.justifyContent} height=${cs.height} overflow=${cs.overflow}`;
+      return `top=${r.top.toFixed(0)} bottom=${r.bottom.toFixed(0)} h=${r.height.toFixed(0)} | align-items=${cs.alignItems} justify-content=${cs.justifyContent} height=${cs.height} overflow=${cs.overflow}`;
     }
-
     function dumpLayout() {
-      const ids = ['qrScreen'];
-      const classes = ['.qr-panel', '.qr-layout', '.qr-instruction-card', '.qr-payment-card'];
-      let lines = [];
-      lines.push('viewport=' + window.innerWidth + 'x' + window.innerHeight);
-      ids.forEach(id => lines.push('#' + id + ': ' + rectStr(document.getElementById(id))));
+      const classes = ['#qrScreen', '.qr-panel', '.qr-layout', '.qr-instruction-card', '.qr-payment-card'];
+      let lines = ['viewport=' + window.innerWidth + 'x' + window.innerHeight];
       classes.forEach(sel => lines.push(sel + ': ' + rectStr(document.querySelector(sel))));
-
-      const overlay = document.createElement('div');
-      overlay.style.cssText = 'position:fixed;top:0;left:0;background:#000;color:#0f0;font:16px monospace;padding:4px 8px;z-index:99999;';
-      overlay.textContent = 'W=' + window.innerWidth + ' H=' + window.innerHeight;
-      document.body.appendChild(overlay);
+      let overlay = document.getElementById('__dbg');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = '__dbg';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#000;color:#0f0;font:11px monospace;padding:6px;z-index:99999;white-space:pre-wrap;line-height:1.4;';
+        document.body.appendChild(overlay);
+      }
+      overlay.textContent = lines.join('\n');
     }
+    setInterval(() => {
+      if (appState && appState.screen === 'qr') dumpLayout();
+    }, 500);
   </script>
 </body>
 </html>
