@@ -348,6 +348,9 @@
               </div>
               <p id="qrHelpSecondary" class="qr-help subtle">Please confirm the amount inside Venmo before sending.</p>
               <p id="qrHelpTertiary" class="qr-help subtle hidden">Recipient name will show as CHRISTOPHER LEQUANG in Zelle.</p>
+              <div id="qrNoteSection" class="qr-note-section hidden">
+                <input id="qrNoteInput" type="text" class="qr-note-input" maxlength="60" placeholder="Add a note (optional)">
+              </div>
             </section>
 
             <section class="qr-card qr-payment-card">
@@ -358,9 +361,6 @@
               <div class="qr-amount-block">
                 <span class="qr-amount-label">Amount Due</span>
                 <div id="zelleAmountDisplay" class="zelle-amount-display hidden">$0.00</div>
-              </div>
-              <div id="qrNoteSection" class="qr-note-section hidden">
-                <input id="qrNoteInput" type="text" class="qr-note-input" maxlength="60" placeholder="Add a note (optional)">
               </div>
               <div class="qr-scan-frame">
                 <div id="qrCode" class="qr-code" aria-label="Venmo QR Code"></div>
