@@ -2367,29 +2367,32 @@ async function handleCreateAdminSubmit(event) {
 
   elements.createAdminButton.disabled = true;
 
-  // Use a throwaway client for signUp so it can't hijack the current
-  // admin's in-memory session on appState.supabaseClient.
-  const signUpClient = createSupabaseClient();
-  const { data, error } = await signUpClient.auth.signUp({ email, password: DEFAULT_ADMIN_TEMP_PASSWORD });
-
-  if (error || !data?.user) {
-    elements.createAdminButton.disabled = false;
-    showMessage(error?.message || "Could not create that account.");
-    return;
-  }
-
-  // A DB trigger auto-creates a (non-admin) profiles row in the same
-  // transaction as the auth.users insert, so this row is guaranteed to
-  // exist by the time signUp() resolves — update it to grant admin.
-  const { error: profileError } = await appState.supabaseClient
-    .from("profiles")
-    .update({ is_admin: true, must_change_password: true })
-    .eq("id", data.user.id);
+  // Delegates to the create-admin Edge Function, which uses the
+  // service_role key server-side to create the account directly
+  // (auth.admin.createUser, email_confirm: true) and grant admin — no
+  // public signUp(), no confirmation email, no rate limit.
+  const { data, error } = await appState.supabaseClient.functions.invoke("create-admin", {
+    body: { email, password: DEFAULT_ADMIN_TEMP_PASSWORD }
+  });
 
   elements.createAdminButton.disabled = false;
 
-  if (profileError) {
-    showMessage(`Account created, but granting admin access failed: ${profileError.message}`);
+  if (error) {
+    let message = error.message || "Could not create that account.";
+    try {
+      if (error.context && typeof error.context.json === "function") {
+        const body = await error.context.json();
+        message = body?.error || message;
+      }
+    } catch (_readError) {
+      // Fall back to error.message above.
+    }
+    showMessage(message);
+    return;
+  }
+
+  if (!data?.success) {
+    showMessage(data?.error || "Could not create that account.");
     return;
   }
 
