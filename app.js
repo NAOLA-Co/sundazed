@@ -180,6 +180,10 @@ const elements = {
   supabaseKeyInput: document.getElementById("supabaseKeyInput"),
   workspaceKeyInput: document.getElementById("workspaceKeyInput"),
   settingsNoteInput: document.getElementById("settingsNoteInput"),
+  createAdminForm: document.getElementById("createAdminForm"),
+  createAdminEmail: document.getElementById("createAdminEmail"),
+  createAdminPassword: document.getElementById("createAdminPassword"),
+  createAdminButton: document.getElementById("createAdminButton"),
   resetDefaultsButton: document.getElementById("resetDefaultsButton"),
   settingsPresetList: document.getElementById("settingsPresetList"),
   itemModal: document.getElementById("itemModal"),
@@ -311,6 +315,7 @@ function bindEvents() {
   attachReportPullToRefresh();
   elements.saveItemsButton.addEventListener("click", handleItemSettingsSave);
   elements.settingsForm.addEventListener("submit", handleSettingsSave);
+  elements.createAdminForm.addEventListener("submit", handleCreateAdminSubmit);
   elements.resetDefaultsButton.addEventListener("click", resetDefaultSettings);
 }
 
@@ -2155,6 +2160,55 @@ async function handleLoginAdminSubmit() {
   });
   renderLoginState();
   loadUserItemOrder();
+}
+
+async function handleCreateAdminSubmit(event) {
+  event.preventDefault();
+
+  if (IS_DEMO) {
+    showMessage("Creating admin accounts is disabled in demo mode.");
+    return;
+  }
+
+  const email = elements.createAdminEmail.value.trim();
+  const password = elements.createAdminPassword.value;
+
+  if (!email || password.length < 6) {
+    showMessage("Enter an email and a password of at least 6 characters.");
+    return;
+  }
+
+  if (!appState.supabaseClient) {
+    showMessage("Cloud sync isn't configured.");
+    return;
+  }
+
+  elements.createAdminButton.disabled = true;
+
+  // Use a throwaway client for signUp so it can't hijack the current
+  // admin's in-memory session on appState.supabaseClient.
+  const signUpClient = createSupabaseClient();
+  const { data, error } = await signUpClient.auth.signUp({ email, password });
+
+  if (error || !data?.user) {
+    elements.createAdminButton.disabled = false;
+    showMessage(error?.message || "Could not create that account.");
+    return;
+  }
+
+  const { error: profileError } = await appState.supabaseClient
+    .from("profiles")
+    .insert({ id: data.user.id, is_admin: true });
+
+  elements.createAdminButton.disabled = false;
+
+  if (profileError) {
+    showMessage(`Account created, but granting admin access failed: ${profileError.message}`);
+    return;
+  }
+
+  elements.createAdminForm.reset();
+  showMessage(`Admin account created for ${email}.`, true);
 }
 
 function handleSwitchUser() {

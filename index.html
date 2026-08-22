@@ -243,6 +243,28 @@
                 <button class="primary-button" type="submit">Save Technical Settings</button>
               </div>
             </form>
+
+            <form id="createAdminForm" class="settings-form" novalidate>
+              <section class="settings-category">
+                <div class="panel-heading category-heading">
+                  <h3>Add Admin</h3>
+                  <p>Create a login for another admin. They can sign in with it right away.</p>
+                </div>
+                <label>
+                  <span>Email</span>
+                  <input id="createAdminEmail" name="createAdminEmail" type="email" autocomplete="off" placeholder="name@example.com">
+                </label>
+
+                <label>
+                  <span>Password</span>
+                  <input id="createAdminPassword" name="createAdminPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+                </label>
+              </section>
+
+              <div class="settings-actions">
+                <button id="createAdminButton" class="primary-button" type="submit">Create Admin Account</button>
+              </div>
+            </form>
           </section>
         </div>
       </section>

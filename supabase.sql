@@ -39,8 +39,10 @@ with check (true);
 create index if not exists sales_events_workspace_date_idx
 on public.sales_events (workspace_key, sale_date desc);
 
--- Admin flag for Supabase Auth users. Only an admin's own row is readable;
--- there is no public write policy, so is_admin can only be set via the
+-- Admin flag for Supabase Auth users. Only an admin's own row is readable.
+-- Only an existing admin can insert/update a profiles row (checked via the
+-- caller's own is_admin flag below), so a plain signed-up user can never
+-- self-elevate; the very first admin still has to be set via the
 -- dashboard, the CLI, or the service_role key.
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -55,6 +57,27 @@ create policy "users read own profile"
 on public.profiles
 for select
 using (auth.uid() = id);
+
+drop policy if exists "admins can grant admin" on public.profiles;
+create policy "admins can grant admin"
+on public.profiles
+for insert
+to authenticated
+with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
+);
+
+drop policy if exists "admins can update profiles" on public.profiles;
+create policy "admins can update profiles"
+on public.profiles
+for update
+to authenticated
+using (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
+)
+with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
+);
 
 -- Named (no-password) users for the guest/host name login. Public policies
 -- match the rest of this app's personal-project security model.
