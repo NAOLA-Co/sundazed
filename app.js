@@ -10,6 +10,7 @@ const ALLOWED_NOTE_ICONS = ["☀️", "🎉", "🍺", "🍸", "🥂"];
 const DEFAULT_NOTE_TEXT = "☀️🎉";
 const DEFAULT_SUPABASE_URL = "https://unpqtfqjxvbijigttdhc.supabase.co";
 const DEFAULT_SUPABASE_KEY = "sb_publishable_76GzVg3VQq-sgUjytYWsRg_qOBC3jPv";
+const DEFAULT_ADMIN_TEMP_PASSWORD = "SunD@yz3d!";
 const DEFAULT_WORKSPACE_KEY = IS_DEMO ? "sundazed-demo" : "sundazed-main";
 const DEFAULT_PRESET_ITEMS = [
   { id: createId(), name: "Vodka Soda", price: 10, variants: [] },
@@ -137,13 +138,16 @@ const elements = {
   hostSubtotal: document.getElementById("hostSubtotal"),
   clearCartButton: document.getElementById("clearCartButton"),
   reportOrderCount: document.getElementById("reportOrderCount"),
+  reportOrderCountCard: document.getElementById("reportOrderCountCard"),
   reportRevenue: document.getElementById("reportRevenue"),
+  reportRevenueCard: document.getElementById("reportRevenueCard"),
   reportSubtotal: document.getElementById("reportSubtotal"),
   reportTips: document.getElementById("reportTips"),
   reportTipsCard: document.getElementById("reportTipsCard"),
-  tipsByUserModal: document.getElementById("tipsByUserModal"),
-  tipsByUserList: document.getElementById("tipsByUserList"),
-  closeTipsByUserModalButton: document.getElementById("closeTipsByUserModalButton"),
+  reportDetailModal: document.getElementById("reportDetailModal"),
+  reportDetailModalTitle: document.getElementById("reportDetailModalTitle"),
+  reportDetailList: document.getElementById("reportDetailList"),
+  closeReportDetailModalButton: document.getElementById("closeReportDetailModalButton"),
   reportDateFilter: document.getElementById("reportDateFilter"),
   reportTodayButton: document.getElementById("reportTodayButton"),
   reportRefreshButton: document.getElementById("reportRefreshButton"),
@@ -191,7 +195,6 @@ const elements = {
   settingsNoteInput: document.getElementById("settingsNoteInput"),
   createAdminForm: document.getElementById("createAdminForm"),
   createAdminEmail: document.getElementById("createAdminEmail"),
-  createAdminPassword: document.getElementById("createAdminPassword"),
   createAdminButton: document.getElementById("createAdminButton"),
   resetDefaultsButton: document.getElementById("resetDefaultsButton"),
   settingsPresetList: document.getElementById("settingsPresetList"),
@@ -327,9 +330,11 @@ function bindEvents() {
   elements.reportTodayButton.addEventListener("click", setReportDateToToday);
   elements.reportRefreshButton.addEventListener("click", handleReportRefreshClick);
   elements.clearReportButton.addEventListener("click", clearReport);
+  elements.reportOrderCountCard.addEventListener("click", openAllSalesModal);
+  elements.reportRevenueCard.addEventListener("click", openCollectedByMethodModal);
   elements.reportTipsCard.addEventListener("click", openTipsByUserModal);
-  elements.closeTipsByUserModalButton.addEventListener("click", closeTipsByUserModal);
-  elements.tipsByUserModal.addEventListener("click", handleModalBackdropClick);
+  elements.closeReportDetailModalButton.addEventListener("click", closeReportDetailModal);
+  elements.reportDetailModal.addEventListener("click", handleModalBackdropClick);
   attachReportPullToRefresh();
   elements.saveItemsButton.addEventListener("click", handleItemSettingsSave);
   elements.settingsForm.addEventListener("submit", handleSettingsSave);
@@ -955,6 +960,20 @@ function renderTopItems(topItems) {
   });
 }
 
+function buildOrderRow(order) {
+  const row = document.createElement("div");
+  row.className = "report-row";
+  row.innerHTML = `
+    <div>
+      <strong>${formatCurrency(order.total)}</strong>
+      <p>${order.itemCount} item${order.itemCount === 1 ? "" : "s"} · Tip ${formatCurrency(order.tip)}${order.userName ? ` · ${escapeHtml(order.userName)}` : ""}</p>
+      <time datetime="${order.timestamp}">${formatReportDate(order.timestamp)}</time>
+    </div>
+    <strong>${order.note || "No icons"}</strong>
+  `;
+  return row;
+}
+
 function renderRecentOrders(orders) {
   elements.reportRecentOrders.innerHTML = "";
 
@@ -966,28 +985,69 @@ function renderRecentOrders(orders) {
   orders
     .slice()
     .reverse()
-    .slice(0, 5)
+    .slice(0, 10)
     .forEach((order) => {
+      elements.reportRecentOrders.appendChild(buildOrderRow(order));
+    });
+}
+
+function showReportDetailModal(title) {
+  elements.reportDetailModalTitle.textContent = title;
+  elements.reportDetailModal.classList.remove("hidden");
+}
+
+function closeReportDetailModal() {
+  elements.reportDetailModal.classList.add("hidden");
+}
+
+function openAllSalesModal() {
+  const orders = appState.report.orders;
+  elements.reportDetailList.innerHTML = "";
+
+  if (!orders.length) {
+    elements.reportDetailList.innerHTML = `<div class="empty-state"><p>No sales in the report yet.</p></div>`;
+  } else {
+    orders
+      .slice()
+      .reverse()
+      .forEach((order) => {
+        elements.reportDetailList.appendChild(buildOrderRow(order));
+      });
+  }
+
+  showReportDetailModal("All Sales");
+}
+
+function openCollectedByMethodModal() {
+  const { collectedByMethod } = getReportMetrics();
+  elements.reportDetailList.innerHTML = "";
+
+  if (!collectedByMethod.length) {
+    elements.reportDetailList.innerHTML = `<div class="empty-state"><p>No payments logged for this date.</p></div>`;
+  } else {
+    collectedByMethod.forEach((entry) => {
       const row = document.createElement("div");
       row.className = "report-row";
       row.innerHTML = `
         <div>
-          <strong>${formatCurrency(order.total)}</strong>
-          <p>${order.itemCount} item${order.itemCount === 1 ? "" : "s"} · Tip ${formatCurrency(order.tip)}${order.userName ? ` · ${escapeHtml(order.userName)}` : ""}</p>
-          <time datetime="${order.timestamp}">${formatReportDate(order.timestamp)}</time>
+          <strong>${escapeHtml(entry.label)}</strong>
+          <p>${entry.orderCount} sale${entry.orderCount === 1 ? "" : "s"}</p>
         </div>
-        <strong>${order.note || "No icons"}</strong>
+        <strong>${formatCurrency(entry.total)}</strong>
       `;
-      elements.reportRecentOrders.appendChild(row);
+      elements.reportDetailList.appendChild(row);
     });
+  }
+
+  showReportDetailModal("Collected by Payment Method");
 }
 
 function openTipsByUserModal() {
   const { tipsByUser } = getReportMetrics();
-  elements.tipsByUserList.innerHTML = "";
+  elements.reportDetailList.innerHTML = "";
 
   if (!tipsByUser.length) {
-    elements.tipsByUserList.innerHTML = `<div class="empty-state"><p>No tips logged for this date.</p></div>`;
+    elements.reportDetailList.innerHTML = `<div class="empty-state"><p>No tips logged for this date.</p></div>`;
   } else {
     tipsByUser.forEach((entry) => {
       const row = document.createElement("div");
@@ -999,15 +1059,11 @@ function openTipsByUserModal() {
         </div>
         <strong>${formatCurrency(entry.tip)}</strong>
       `;
-      elements.tipsByUserList.appendChild(row);
+      elements.reportDetailList.appendChild(row);
     });
   }
 
-  elements.tipsByUserModal.classList.remove("hidden");
-}
-
-function closeTipsByUserModal() {
-  elements.tipsByUserModal.classList.add("hidden");
+  showReportDetailModal("Tips by User");
 }
 
 function handleReportDateChange() {
@@ -1460,8 +1516,8 @@ function handleModalBackdropClick(event) {
     closeVariantModal();
   } else if (event.target === elements.editItemModal) {
     closeEditItemModal();
-  } else if (event.target === elements.tipsByUserModal) {
-    closeTipsByUserModal();
+  } else if (event.target === elements.reportDetailModal) {
+    closeReportDetailModal();
   }
 }
 
@@ -1670,6 +1726,7 @@ async function markOrderPaid() {
     total: summary.total,
     note: summary.note,
     userName: appState.session ? appState.session.displayName : null,
+    paymentMethod: appState.paymentMethod,
     itemCount: appState.cart.reduce((sum, item) => sum + item.quantity, 0),
     items: appState.cart.map((item) => ({
       name: item.name,
@@ -1927,9 +1984,12 @@ async function clearReport() {
   showMessage(`Sales cleared for ${label}.`, true);
 }
 
+const PAYMENT_METHOD_LABELS = { venmo: "Venmo", zelle: "Zelle" };
+
 function getReportMetrics() {
   const itemMap = new Map();
   const tipsByUserMap = new Map();
+  const collectedByMethodMap = new Map();
 
   const totals = appState.report.orders.reduce((accumulator, order) => {
     accumulator.orderCount += 1;
@@ -1951,6 +2011,12 @@ function getReportMetrics() {
     currentUserTips.orderCount += 1;
     tipsByUserMap.set(userKey, currentUserTips);
 
+    const methodKey = order.paymentMethod || "unspecified";
+    const currentMethod = collectedByMethodMap.get(methodKey) || { key: methodKey, total: 0, orderCount: 0 };
+    currentMethod.total = roundMoney(currentMethod.total + (Number(order.total) || 0));
+    currentMethod.orderCount += 1;
+    collectedByMethodMap.set(methodKey, currentMethod);
+
     return accumulator;
   }, {
     orderCount: 0,
@@ -1963,6 +2029,9 @@ function getReportMetrics() {
     ...totals,
     tipsByUser: Array.from(tipsByUserMap.values())
       .sort((left, right) => right.tip - left.tip),
+    collectedByMethod: Array.from(collectedByMethodMap.values())
+      .map((entry) => ({ ...entry, label: PAYMENT_METHOD_LABELS[entry.key] || "Unspecified" }))
+      .sort((left, right) => right.total - left.total),
     topItems: Array.from(itemMap.values())
       .sort((left, right) => right.quantity - left.quantity || right.revenue - left.revenue)
       .slice(0, 5)
@@ -2285,10 +2354,9 @@ async function handleCreateAdminSubmit(event) {
   }
 
   const email = elements.createAdminEmail.value.trim();
-  const password = elements.createAdminPassword.value;
 
-  if (!email || password.length < 6) {
-    showMessage("Enter an email and a password of at least 6 characters.");
+  if (!email) {
+    showMessage("Enter an email address.");
     return;
   }
 
@@ -2302,7 +2370,7 @@ async function handleCreateAdminSubmit(event) {
   // Use a throwaway client for signUp so it can't hijack the current
   // admin's in-memory session on appState.supabaseClient.
   const signUpClient = createSupabaseClient();
-  const { data, error } = await signUpClient.auth.signUp({ email, password });
+  const { data, error } = await signUpClient.auth.signUp({ email, password: DEFAULT_ADMIN_TEMP_PASSWORD });
 
   if (error || !data?.user) {
     elements.createAdminButton.disabled = false;
@@ -2310,9 +2378,13 @@ async function handleCreateAdminSubmit(event) {
     return;
   }
 
+  // A DB trigger auto-creates a (non-admin) profiles row in the same
+  // transaction as the auth.users insert, so this row is guaranteed to
+  // exist by the time signUp() resolves — update it to grant admin.
   const { error: profileError } = await appState.supabaseClient
     .from("profiles")
-    .insert({ id: data.user.id, is_admin: true, must_change_password: true });
+    .update({ is_admin: true, must_change_password: true })
+    .eq("id", data.user.id);
 
   elements.createAdminButton.disabled = false;
 
@@ -2322,7 +2394,7 @@ async function handleCreateAdminSubmit(event) {
   }
 
   elements.createAdminForm.reset();
-  showMessage(`Admin account created for ${email}. Give them this temporary password — they'll be asked to set their own on first login.`, true);
+  showMessage(`Admin account created for ${email}. Temporary password: ${DEFAULT_ADMIN_TEMP_PASSWORD}`, true);
 }
 
 function handleSwitchUser() {
@@ -2444,7 +2516,8 @@ async function sendSaleToCloud(order) {
         item_count: order.itemCount,
         items_json: order.items,
         created_at: order.timestamp,
-        user_name: order.userName || null
+        user_name: order.userName || null,
+        payment_method: order.paymentMethod || null
       });
     if (error) {
       throw error;
@@ -2474,7 +2547,7 @@ async function refreshReportData(options = {}) {
   try {
     const { data, error } = await appState.supabaseClient
       .from("sales_events")
-      .select("order_id, sale_date, subtotal, tip, total, note, item_count, items_json, created_at, user_name")
+      .select("order_id, sale_date, subtotal, tip, total, note, item_count, items_json, created_at, user_name, payment_method")
       .eq("workspace_key", appState.settings.workspaceKey)
       .eq("sale_date", appState.reportFilterDate)
       .order("created_at", { ascending: false });
@@ -2491,6 +2564,7 @@ async function refreshReportData(options = {}) {
       total: Number(row.total) || 0,
       note: row.note || "",
       userName: row.user_name || "",
+      paymentMethod: row.payment_method || "",
       itemCount: Number(row.item_count) || 0,
       items: Array.isArray(row.items_json) ? row.items_json : []
     }));

@@ -16,8 +16,12 @@ create table if not exists public.sales_events (
   item_count integer not null default 0,
   items_json jsonb not null,
   created_at timestamptz not null default now(),
-  user_name text
+  user_name text,
+  payment_method text
 );
+
+alter table public.sales_events
+  add column if not exists payment_method text;
 
 alter table public.app_settings enable row level security;
 alter table public.sales_events enable row level security;
@@ -82,6 +86,33 @@ using (
 with check (
   exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
 );
+
+-- Auto-create a (non-admin) profiles row for every new auth user, in the
+-- same transaction as the auth.users insert. Without this, granting admin
+-- client-side right after signUp() can hit profiles_id_fkey: the new
+-- auth.users row and the follow-up profiles insert can go through
+-- different pooled connections that haven't yet seen each other's commit.
+-- Running inside the same transaction as the auth.users insert sidesteps
+-- that entirely. Always creates a harmless is_admin = false row; the
+-- caller then UPDATEs it to grant admin (covered by the policy above).
+create or replace function public.handle_new_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, is_admin, must_change_password)
+  values (new.id, false, false)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_auth_user();
 
 -- Named (no-password) users for the guest/host name login. Public policies
 -- match the rest of this app's personal-project security model.
