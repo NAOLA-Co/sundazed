@@ -1778,7 +1778,7 @@ function renderPaymentQr() {
   elements.venmoScanSteps.classList.toggle("hidden", !isVenmo);
 
   if (isVenmo) {
-    elements.qrHelpPrimary.innerHTML = 'Use your <span class="qr-help-accent">camera app</span> to scan the QR&nbsp;code.';
+    elements.qrHelpPrimary.innerHTML = 'Use your <span class="qr-help-accent">camera app</span><br>to scan the QR&nbsp;code.';
     setElementText(elements.qrHelpSecondary, "The Camera app will open a Venmo link for you.");
     setElementText(elements.qrHelpTertiary, "");
     renderQrCode(venmoUrl);
