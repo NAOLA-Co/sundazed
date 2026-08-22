@@ -715,18 +715,7 @@ function renderTipOptions() {
     button.type = "button";
     button.className = `tip-button ${appState.tipSelection === option.id ? "selected" : ""}`;
     button.dataset.tipId = option.id;
-    if (option.type === "fixed") {
-      button.innerHTML = `<div class="tip-button-label">${option.label}</div>`;
-    } else {
-      const tipAmount = appState.customTipAmount > 0 ? formatCurrency(appState.customTipAmount) : "Enter amount";
-      const amountClass = appState.customTipAmount <= 0
-        ? "tip-button-amount tip-button-amount-placeholder"
-        : "tip-button-amount";
-      button.innerHTML = `
-        <div class="tip-button-label">${option.label}</div>
-        <div class="${amountClass}">${tipAmount}</div>
-      `;
-    }
+    button.innerHTML = `<div class="tip-button-label">${option.label}</div>`;
     elements.tipOptions.appendChild(button);
   });
 }
