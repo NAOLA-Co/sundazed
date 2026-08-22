@@ -2438,11 +2438,24 @@ function isLocalDevHost() {
 }
 
 function registerServiceWorker() {
-  if ("serviceWorker" in navigator && !isLocalDevHost()) {
-    navigator.serviceWorker.register("service-worker.js").catch(() => {
-      // Ignore registration errors for local previews.
-    });
+  if (!("serviceWorker" in navigator) || isLocalDevHost()) {
+    return;
   }
+
+  let reloadedForUpdate = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloadedForUpdate) {
+      return;
+    }
+    reloadedForUpdate = true;
+    window.location.reload();
+  });
+
+  navigator.serviceWorker.register("service-worker.js").then((registration) => {
+    registration.update();
+  }).catch(() => {
+    // Ignore registration errors for local previews.
+  });
 }
 
 function roundMoney(value) {
