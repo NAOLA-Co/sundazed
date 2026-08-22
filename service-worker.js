@@ -1,4 +1,4 @@
-const CACHE_NAME = "party-pay-qr-v22";
+const CACHE_NAME = "party-pay-qr-v23";
 const APP_SHELL = [
   "./",
   "./index.html",

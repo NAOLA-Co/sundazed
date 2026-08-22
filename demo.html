@@ -189,10 +189,10 @@
                 <span>Subtotal Collected</span>
                 <strong id="reportSubtotal">$0.00</strong>
               </div>
-              <div class="report-card">
+              <button type="button" id="reportTipsCard" class="report-card report-card-button">
                 <span>Total Tips</span>
                 <strong id="reportTips">$0.00</strong>
-              </div>
+              </button>
             </div>
             <div class="panel-heading compact-heading">
               <h3>Top Items</h3>
@@ -491,6 +491,19 @@
           <div class="inline-actions">
             <button id="confirmModalConfirmButton" class="primary-button" type="button">Confirm</button>
             <button id="confirmModalCancelButton" class="ghost-button" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tipsByUserModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tipsByUserModalTitle">
+        <div class="modal-card">
+          <div class="panel-heading">
+            <h3 id="tipsByUserModalTitle">Tips by User</h3>
+            <p>Breakdown for the selected date.</p>
+          </div>
+          <div id="tipsByUserList" class="report-list"></div>
+          <div class="inline-actions">
+            <button id="closeTipsByUserModalButton" class="ghost-button" type="button">Close</button>
           </div>
         </div>
       </div>

@@ -140,6 +140,10 @@ const elements = {
   reportRevenue: document.getElementById("reportRevenue"),
   reportSubtotal: document.getElementById("reportSubtotal"),
   reportTips: document.getElementById("reportTips"),
+  reportTipsCard: document.getElementById("reportTipsCard"),
+  tipsByUserModal: document.getElementById("tipsByUserModal"),
+  tipsByUserList: document.getElementById("tipsByUserList"),
+  closeTipsByUserModalButton: document.getElementById("closeTipsByUserModalButton"),
   reportDateFilter: document.getElementById("reportDateFilter"),
   reportTodayButton: document.getElementById("reportTodayButton"),
   reportRefreshButton: document.getElementById("reportRefreshButton"),
@@ -323,6 +327,9 @@ function bindEvents() {
   elements.reportTodayButton.addEventListener("click", setReportDateToToday);
   elements.reportRefreshButton.addEventListener("click", handleReportRefreshClick);
   elements.clearReportButton.addEventListener("click", clearReport);
+  elements.reportTipsCard.addEventListener("click", openTipsByUserModal);
+  elements.closeTipsByUserModalButton.addEventListener("click", closeTipsByUserModal);
+  elements.tipsByUserModal.addEventListener("click", handleModalBackdropClick);
   attachReportPullToRefresh();
   elements.saveItemsButton.addEventListener("click", handleItemSettingsSave);
   elements.settingsForm.addEventListener("submit", handleSettingsSave);
@@ -975,6 +982,34 @@ function renderRecentOrders(orders) {
     });
 }
 
+function openTipsByUserModal() {
+  const { tipsByUser } = getReportMetrics();
+  elements.tipsByUserList.innerHTML = "";
+
+  if (!tipsByUser.length) {
+    elements.tipsByUserList.innerHTML = `<div class="empty-state"><p>No tips logged for this date.</p></div>`;
+  } else {
+    tipsByUser.forEach((entry) => {
+      const row = document.createElement("div");
+      row.className = "report-row";
+      row.innerHTML = `
+        <div>
+          <strong>${escapeHtml(entry.name)}</strong>
+          <p>${entry.orderCount} sale${entry.orderCount === 1 ? "" : "s"}</p>
+        </div>
+        <strong>${formatCurrency(entry.tip)}</strong>
+      `;
+      elements.tipsByUserList.appendChild(row);
+    });
+  }
+
+  elements.tipsByUserModal.classList.remove("hidden");
+}
+
+function closeTipsByUserModal() {
+  elements.tipsByUserModal.classList.add("hidden");
+}
+
 function handleReportDateChange() {
   const nextDate = elements.reportDateFilter.value || getTodayDateString();
   appState.reportFilterDate = nextDate;
@@ -1425,6 +1460,8 @@ function handleModalBackdropClick(event) {
     closeVariantModal();
   } else if (event.target === elements.editItemModal) {
     closeEditItemModal();
+  } else if (event.target === elements.tipsByUserModal) {
+    closeTipsByUserModal();
   }
 }
 
@@ -1892,6 +1929,7 @@ async function clearReport() {
 
 function getReportMetrics() {
   const itemMap = new Map();
+  const tipsByUserMap = new Map();
 
   const totals = appState.report.orders.reduce((accumulator, order) => {
     accumulator.orderCount += 1;
@@ -1907,6 +1945,12 @@ function getReportMetrics() {
       itemMap.set(key, current);
     });
 
+    const userKey = order.userName || "Unassigned";
+    const currentUserTips = tipsByUserMap.get(userKey) || { name: userKey, tip: 0, orderCount: 0 };
+    currentUserTips.tip = roundMoney(currentUserTips.tip + (Number(order.tip) || 0));
+    currentUserTips.orderCount += 1;
+    tipsByUserMap.set(userKey, currentUserTips);
+
     return accumulator;
   }, {
     orderCount: 0,
@@ -1917,6 +1961,8 @@ function getReportMetrics() {
 
   return {
     ...totals,
+    tipsByUser: Array.from(tipsByUserMap.values())
+      .sort((left, right) => right.tip - left.tip),
     topItems: Array.from(itemMap.values())
       .sort((left, right) => right.quantity - left.quantity || right.revenue - left.revenue)
       .slice(0, 5)

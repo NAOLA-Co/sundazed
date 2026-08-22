@@ -1371,6 +1371,22 @@ select option {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.report-card-button {
+  display: block;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.report-card-button:hover,
+.report-card-button:focus-visible {
+  background: rgba(255, 203, 107, 0.14);
+}
+
 .checkout-total-card {
   margin-bottom: 16px;
   padding: 16px 18px;
