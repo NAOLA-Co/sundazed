@@ -77,6 +77,7 @@ const appState = {
   session: null,
   loginMode: "name",
   loginBusy: false,
+  pendingAdminUser: null,
   pendingSwitch: false,
   reorderMode: false,
   suppressNextClick: false,
@@ -118,6 +119,10 @@ const elements = {
   loginAdminPassword: document.getElementById("loginAdminPassword"),
   loginAdminSubmit: document.getElementById("loginAdminSubmit"),
   loginAdminBack: document.getElementById("loginAdminBack"),
+  loginAdminChangePasswordView: document.getElementById("loginAdminChangePasswordView"),
+  loginNewPassword: document.getElementById("loginNewPassword"),
+  loginNewPasswordConfirm: document.getElementById("loginNewPasswordConfirm"),
+  loginSetPasswordButton: document.getElementById("loginSetPasswordButton"),
   loginError: document.getElementById("loginError"),
   loginCloseButton: document.getElementById("loginCloseButton"),
   stepBackButton: document.getElementById("stepBackButton"),
@@ -298,6 +303,12 @@ function bindEvents() {
   elements.loginAdminPassword.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       handleLoginAdminSubmit();
+    }
+  });
+  elements.loginSetPasswordButton.addEventListener("click", handleLoginSetPasswordSubmit);
+  elements.loginNewPasswordConfirm.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleLoginSetPasswordSubmit();
     }
   });
   elements.loginLastName.addEventListener("keydown", (event) => {
@@ -2017,12 +2028,13 @@ function setLoginMode(mode) {
   appState.loginMode = mode;
   elements.loginNameView.classList.toggle("hidden", mode !== "name");
   elements.loginAdminView.classList.toggle("hidden", mode !== "admin");
+  elements.loginAdminChangePasswordView.classList.toggle("hidden", mode !== "admin-change-password");
   setLoginError("");
 }
 
 function setLoginBusy(busy) {
   appState.loginBusy = busy;
-  [elements.loginContinueButton, elements.loginCreateButton, elements.loginAdminSubmit].forEach((button) => {
+  [elements.loginContinueButton, elements.loginCreateButton, elements.loginAdminSubmit, elements.loginSetPasswordButton].forEach((button) => {
     button.disabled = busy;
   });
 }
@@ -2140,13 +2152,21 @@ async function handleLoginAdminSubmit() {
 
   const { data: profile, error: profileError } = await appState.supabaseClient
     .from("profiles")
-    .select("is_admin")
+    .select("is_admin, must_change_password")
     .eq("id", data.user.id)
     .single();
   setLoginBusy(false);
 
   if (profileError || !profile?.is_admin) {
     setLoginError("This account doesn't have admin access.");
+    return;
+  }
+
+  if (profile.must_change_password) {
+    appState.pendingAdminUser = { id: data.user.id, email };
+    elements.loginNewPassword.value = "";
+    elements.loginNewPasswordConfirm.value = "";
+    setLoginMode("admin-change-password");
     return;
   }
 
@@ -2157,6 +2177,54 @@ async function handleLoginAdminSubmit() {
     id: data.user.id,
     email,
     displayName: email
+  });
+  renderLoginState();
+  loadUserItemOrder();
+}
+
+async function handleLoginSetPasswordSubmit() {
+  const password = elements.loginNewPassword.value;
+  const confirmPassword = elements.loginNewPasswordConfirm.value;
+
+  if (password.length < 6) {
+    setLoginError("Password must be at least 6 characters.");
+    return;
+  }
+  if (password !== confirmPassword) {
+    setLoginError("Passwords don't match.");
+    return;
+  }
+
+  setLoginBusy(true);
+  const { error: updateError } = await appState.supabaseClient.auth.updateUser({ password });
+
+  if (updateError) {
+    setLoginBusy(false);
+    setLoginError(updateError.message || "Couldn't set your password. Try again.");
+    return;
+  }
+
+  const pendingAdminUser = appState.pendingAdminUser;
+  const { error: profileError } = await appState.supabaseClient
+    .from("profiles")
+    .update({ must_change_password: false })
+    .eq("id", pendingAdminUser.id);
+
+  setLoginBusy(false);
+
+  if (profileError) {
+    setLoginError(`Password set, but finishing setup failed: ${profileError.message}`);
+    return;
+  }
+
+  appState.pendingAdminUser = null;
+  appState.pendingSwitch = false;
+  appState.adminTab = "items";
+  saveSession({
+    type: "admin",
+    id: pendingAdminUser.id,
+    email: pendingAdminUser.email,
+    displayName: pendingAdminUser.email
   });
   renderLoginState();
   loadUserItemOrder();
@@ -2198,7 +2266,7 @@ async function handleCreateAdminSubmit(event) {
 
   const { error: profileError } = await appState.supabaseClient
     .from("profiles")
-    .insert({ id: data.user.id, is_admin: true });
+    .insert({ id: data.user.id, is_admin: true, must_change_password: true });
 
   elements.createAdminButton.disabled = false;
 
@@ -2208,7 +2276,7 @@ async function handleCreateAdminSubmit(event) {
   }
 
   elements.createAdminForm.reset();
-  showMessage(`Admin account created for ${email}.`, true);
+  showMessage(`Admin account created for ${email}. Give them this temporary password — they'll be asked to set their own on first login.`, true);
 }
 
 function handleSwitchUser() {

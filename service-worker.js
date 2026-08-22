@@ -1,8 +1,7 @@
-const CACHE_NAME = "party-pay-qr-v21";
+const CACHE_NAME = "party-pay-qr-v22";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./accept-invite.html",
   "./styles.css",
   "./app.js",
   "./manifest.json",

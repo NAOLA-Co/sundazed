@@ -47,8 +47,12 @@ on public.sales_events (workspace_key, sale_date desc);
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   is_admin boolean not null default false,
+  must_change_password boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  add column if not exists must_change_password boolean not null default false;
 
 alter table public.profiles enable row level security;
 

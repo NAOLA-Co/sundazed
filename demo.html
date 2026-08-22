@@ -59,6 +59,19 @@
         <button id="loginAdminBack" class="ghost-button" type="button">Back</button>
       </div>
 
+      <div id="loginAdminChangePasswordView" class="login-view hidden">
+        <p>First-time login — set a new password to continue.</p>
+        <label>
+          <span>New Password</span>
+          <input id="loginNewPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+        </label>
+        <label>
+          <span>Confirm Password</span>
+          <input id="loginNewPasswordConfirm" type="password" autocomplete="new-password" placeholder="Re-enter password">
+        </label>
+        <button id="loginSetPasswordButton" class="primary-button" type="button">Set Password &amp; Continue</button>
+      </div>
+
       <p id="loginError" class="login-error hidden"></p>
     </div>
   </div>
@@ -245,7 +258,7 @@
               <section class="settings-category">
                 <div class="panel-heading category-heading">
                   <h3>Add Admin</h3>
-                  <p>Create a login for another admin. They can sign in with it right away.</p>
+                  <p>Create a login for another admin with a temporary password. They'll set their own on first login.</p>
                 </div>
                 <label>
                   <span>Email</span>
@@ -253,7 +266,7 @@
                 </label>
 
                 <label>
-                  <span>Password</span>
+                  <span>Temporary Password</span>
                   <input id="createAdminPassword" name="createAdminPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">
                 </label>
               </section>
