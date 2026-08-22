@@ -50,10 +50,10 @@ const DEFAULT_PRESET_ITEMS = [
   { id: createId(), name: "Espresso Martini", price: 14, variants: [] }
 ];
 const TIP_OPTIONS = [
-  { id: "none", label: "No Tip", type: "percent", value: 0 },
-  { id: "15", label: "15%", type: "percent", value: 0.15 },
-  { id: "18", label: "18%", type: "percent", value: 0.18 },
-  { id: "20", label: "20%", type: "percent", value: 0.2 },
+  { id: "none", label: "No Tip", type: "fixed", value: 0 },
+  { id: "1", label: "$1", type: "fixed", value: 1 },
+  { id: "2", label: "$2", type: "fixed", value: 2 },
+  { id: "3", label: "$3", type: "fixed", value: 3 },
   { id: "custom", label: "Custom", type: "custom", value: null }
 ];
 
@@ -709,15 +709,14 @@ function renderGuestCart() {
 
 function renderTipOptions() {
   elements.tipOptions.innerHTML = "";
-  const subtotal = getSubtotal();
 
   TIP_OPTIONS.forEach((option) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `tip-button ${appState.tipSelection === option.id ? "selected" : ""}`;
     button.dataset.tipId = option.id;
-    const tipAmount = option.type === "percent"
-      ? formatCurrency(roundMoney(subtotal * option.value))
+    const tipAmount = option.type === "fixed"
+      ? (option.value > 0 ? formatCurrency(option.value) : "")
       : appState.customTipAmount > 0 ? formatCurrency(appState.customTipAmount) : "Enter amount";
     const amountClass = option.type === "custom" && appState.customTipAmount <= 0
       ? "tip-button-amount tip-button-amount-placeholder"
@@ -1687,8 +1686,7 @@ function getTipAmount() {
   }
 
   const selected = TIP_OPTIONS.find((option) => option.id === appState.tipSelection);
-  const subtotal = getSubtotal();
-  return selected ? roundMoney(subtotal * selected.value) : 0;
+  return selected ? roundMoney(selected.value) : 0;
 }
 
 function getCurrentNote() {
