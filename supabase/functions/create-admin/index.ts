@@ -80,12 +80,38 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: createError?.message || "Could not create user" }, 400);
   }
 
-  const { error: profileError } = await adminClient
-    .from("profiles")
-    .upsert({ id: created.user.id, is_admin: true, must_change_password: true });
+  // Upsert, then read back the row to confirm it actually landed — a
+  // trigger-created row from the createUser call above and this upsert
+  // can be visible to different pooled connections, so don't trust a
+  // clean "no error" alone. Retry once on a short delay if it didn't
+  // actually apply.
+  async function grantAdmin(): Promise<string | null> {
+    const { data, error } = await adminClient
+      .from("profiles")
+      .upsert(
+        { id: created!.user.id, is_admin: true, must_change_password: true },
+        { onConflict: "id", ignoreDuplicates: false }
+      )
+      .select("is_admin")
+      .single();
 
-  if (profileError) {
-    return jsonResponse({ error: `Account created, but granting admin access failed: ${profileError.message}` }, 500);
+    if (error) {
+      return error.message;
+    }
+    if (!data?.is_admin) {
+      return "profiles row did not update";
+    }
+    return null;
+  }
+
+  let grantFailure = await grantAdmin();
+  if (grantFailure) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    grantFailure = await grantAdmin();
+  }
+
+  if (grantFailure) {
+    return jsonResponse({ error: `Account created, but granting admin access failed: ${grantFailure}` }, 500);
   }
 
   return jsonResponse({ success: true, id: created.user.id });

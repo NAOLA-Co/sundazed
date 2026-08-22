@@ -86,6 +86,7 @@ const appState = {
 };
 
 const SESSION_STORAGE_KEY = `${STORAGE_PREFIX}session`;
+const SUPABASE_SESSION_STORAGE_KEY = `${STORAGE_PREFIX}supabase-session`;
 
 const elements = {
   hostScreen: document.getElementById("hostScreen"),
@@ -234,12 +235,31 @@ const elements = {
   confirmModalCancelButton: document.getElementById("confirmModalCancelButton")
 };
 
+function restoreSupabaseSessionIfAdmin() {
+  if (appState.session?.type !== "admin" || !appState.supabaseClient) {
+    return;
+  }
+  const storedSupabaseSession = loadSupabaseSession();
+  if (!storedSupabaseSession) {
+    return;
+  }
+  appState.supabaseClient.auth.setSession(storedSupabaseSession).then(({ data }) => {
+    if (data?.session) {
+      saveSupabaseSession(data.session);
+    }
+  }).catch(() => {
+    // Stored tokens may have expired; admin-only actions will just
+    // require signing in again in that case.
+  });
+}
+
 function init() {
   appState.cart = loadCart();
   appState.supabaseClient = createSupabaseClient();
   appState.session = IS_DEMO
     ? { type: "admin", id: "demo-admin", displayName: "Demo Host" }
     : loadSession();
+  restoreSupabaseSessionIfAdmin();
   bindEvents();
   renderAll();
   renderLoginState();
@@ -1621,6 +1641,7 @@ function handleSettingsSave(event) {
 
   saveSettings();
   appState.supabaseClient = createSupabaseClient();
+  restoreSupabaseSessionIfAdmin();
   renderAll();
   syncSettingsToCloud()
     .then((didSync) => {
@@ -2095,8 +2116,45 @@ function saveSession(session) {
 
 function clearSession() {
   appState.session = null;
+  clearSupabaseSession();
   try {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch (error) {
+    // Ignore storage failures.
+  }
+}
+
+// appState.supabaseClient itself is never persisted (persistSession:
+// false), so a page reload leaves the admin's lightweight app session
+// intact but with no real Supabase Auth JWT underneath it — silently
+// breaking anything that needs one (RLS-gated writes, Edge Functions).
+// Stash just the tokens so they can be restored on the next load.
+function saveSupabaseSession(session) {
+  if (!session?.access_token || !session?.refresh_token) {
+    return;
+  }
+  try {
+    sessionStorage.setItem(SUPABASE_SESSION_STORAGE_KEY, JSON.stringify({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token
+    }));
+  } catch (error) {
+    // Ignore storage failures (e.g. private browsing).
+  }
+}
+
+function loadSupabaseSession() {
+  try {
+    const raw = sessionStorage.getItem(SUPABASE_SESSION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function clearSupabaseSession() {
+  try {
+    sessionStorage.removeItem(SUPABASE_SESSION_STORAGE_KEY);
   } catch (error) {
     // Ignore storage failures.
   }
@@ -2264,6 +2322,8 @@ async function handleLoginAdminSubmit() {
     setLoginError("Incorrect email or password.");
     return;
   }
+
+  saveSupabaseSession(data.session);
 
   const { data: profile, error: profileError } = await appState.supabaseClient
     .from("profiles")
