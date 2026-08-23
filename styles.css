@@ -2393,6 +2393,10 @@ a[aria-disabled="true"] {
     text-overflow: ellipsis;
   }
 
+  .final-total-row {
+    margin-top: 28px;
+  }
+
   .guest-summary-footer {
     margin-top: 40px;
   }
