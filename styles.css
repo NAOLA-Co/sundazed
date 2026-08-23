@@ -1966,6 +1966,26 @@ select option {
   padding: 20px;
 }
 
+.report-detail-card {
+  position: relative;
+}
+
+.report-detail-card .panel-heading {
+  padding-right: 40px;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 999px;
+}
+
 #reportDetailList {
   max-height: min(50vh, 420px);
   overflow-y: auto;
@@ -2386,6 +2406,45 @@ a[aria-disabled="true"] {
     min-height: 1.1em;
     margin-bottom: 0;
     font-size: 1rem;
+  }
+
+  .report-detail-card {
+    width: min(90%, 720px);
+    padding: 28px;
+  }
+
+  .report-detail-card .panel-heading h3 {
+    font-size: 1.3rem;
+  }
+
+  .report-detail-card .panel-heading p {
+    font-size: 1rem;
+  }
+
+  #reportDetailList {
+    max-height: min(70vh, 640px);
+    gap: 14px;
+  }
+
+  .report-detail-card .report-row {
+    padding: 18px;
+  }
+
+  .report-detail-card .report-row strong {
+    font-size: 1.1rem;
+  }
+
+  .report-detail-card .report-row p,
+  .report-detail-card .report-row time {
+    font-size: 0.95rem;
+  }
+
+  .modal-close-button {
+    top: 20px;
+    right: 20px;
+    min-height: 40px;
+    min-width: 40px;
+    font-size: 1.1rem;
   }
 
 }
