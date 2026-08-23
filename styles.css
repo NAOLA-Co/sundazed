@@ -2161,6 +2161,52 @@ a[aria-disabled="true"] {
     overflow: hidden;
   }
 
+  .host-cart-panel .panel-heading {
+    margin-bottom: 8px;
+  }
+
+  .host-cart-panel #clearCartButton {
+    min-height: 28px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+
+  .host-cart-body .cart-list {
+    gap: 6px;
+  }
+
+  .host-cart-item {
+    min-height: 0;
+    padding: 8px 10px;
+    gap: 10px;
+  }
+
+  .host-cart-item .cart-meta strong {
+    font-size: 0.92rem;
+  }
+
+  .host-cart-item .cart-meta p {
+    font-size: 0.8rem;
+  }
+
+  .host-cart-item .cart-controls {
+    gap: 6px;
+  }
+
+  .host-cart-item .stepper-button {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0 8px;
+  }
+
+  .host-cart-item .cart-total-cell {
+    min-width: 62px;
+  }
+
+  .host-cart-item .cart-line-total {
+    font-size: 0.98rem;
+  }
+
   .admin-tabs {
     gap: 6px;
   }
