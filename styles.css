@@ -2393,13 +2393,17 @@ a[aria-disabled="true"] {
     text-overflow: ellipsis;
   }
 
+  .guest-summary-footer {
+    margin-top: 40px;
+  }
+
   .guest-payment-method-card {
-    min-height: 88px;
-    padding: 18px 16px;
+    min-height: 118px;
+    padding: 24px 16px;
   }
 
   .guest-payment-method-card .payment-method-logo {
-    max-height: 46px;
+    max-height: 54px;
   }
 
   .guest-payment-label {
