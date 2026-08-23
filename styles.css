@@ -2394,12 +2394,12 @@ a[aria-disabled="true"] {
   }
 
   .guest-payment-method-card {
-    min-height: 64px;
-    padding: 12px 16px;
+    min-height: 88px;
+    padding: 18px 16px;
   }
 
   .guest-payment-method-card .payment-method-logo {
-    max-height: 42px;
+    max-height: 46px;
   }
 
   .guest-payment-label {
