@@ -2176,7 +2176,7 @@ a[aria-disabled="true"] {
   }
 
   .host-cart-item {
-    min-height: 0;
+    min-height: auto;
     padding: 8px 10px;
     gap: 10px;
   }
@@ -2187,6 +2187,10 @@ a[aria-disabled="true"] {
 
   .host-cart-item .cart-meta p {
     font-size: 0.8rem;
+  }
+
+  .host-cart-item .cart-added-by {
+    display: none;
   }
 
   .host-cart-item .cart-controls {

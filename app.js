@@ -715,7 +715,7 @@ function renderHostCart() {
     row.innerHTML = `
       <div class="cart-meta">
         <strong>${escapeHtml(item.name)}</strong>
-        <p>${item.quantity} × ${formatCurrency(item.price)}${item.addedBy ? ` · Added by ${escapeHtml(item.addedBy)}` : ""}</p>
+        <p>${item.quantity} × ${formatCurrency(item.price)}${item.addedBy ? `<span class="cart-added-by"> · Added by ${escapeHtml(item.addedBy)}</span>` : ""}</p>
       </div>
       <div class="cart-controls">
         <button class="stepper-button" type="button" aria-label="Decrease ${escapeHtml(item.name)}">-</button>
