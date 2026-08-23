@@ -122,6 +122,8 @@ const elements = {
   loginAdminSubmit: document.getElementById("loginAdminSubmit"),
   loginAdminBack: document.getElementById("loginAdminBack"),
   loginAdminChangePasswordView: document.getElementById("loginAdminChangePasswordView"),
+  loginAdminFirstName: document.getElementById("loginAdminFirstName"),
+  loginAdminLastName: document.getElementById("loginAdminLastName"),
   loginNewPassword: document.getElementById("loginNewPassword"),
   loginNewPasswordConfirm: document.getElementById("loginNewPasswordConfirm"),
   loginSetPasswordButton: document.getElementById("loginSetPasswordButton"),
@@ -2340,6 +2342,8 @@ async function handleLoginAdminSubmit() {
 
   if (profile.must_change_password) {
     appState.pendingAdminUser = { id: data.user.id, email, name: profile.name };
+    elements.loginAdminFirstName.value = "";
+    elements.loginAdminLastName.value = "";
     elements.loginNewPassword.value = "";
     elements.loginNewPasswordConfirm.value = "";
     setLoginMode("admin-change-password");
@@ -2359,9 +2363,15 @@ async function handleLoginAdminSubmit() {
 }
 
 async function handleLoginSetPasswordSubmit() {
+  const firstName = elements.loginAdminFirstName.value.trim();
+  const lastName = elements.loginAdminLastName.value.trim();
   const password = elements.loginNewPassword.value;
   const confirmPassword = elements.loginNewPasswordConfirm.value;
 
+  if (!firstName || !lastName) {
+    setLoginError("Enter a first and last name.");
+    return;
+  }
   if (password.length < 6) {
     setLoginError("Password must be at least 6 characters.");
     return;
@@ -2370,6 +2380,8 @@ async function handleLoginSetPasswordSubmit() {
     setLoginError("Passwords don't match.");
     return;
   }
+
+  const name = `${firstName} ${lastName}`;
 
   setLoginBusy(true);
   const { error: updateError } = await appState.supabaseClient.auth.updateUser({ password });
@@ -2383,7 +2395,7 @@ async function handleLoginSetPasswordSubmit() {
   const pendingAdminUser = appState.pendingAdminUser;
   const { error: profileError } = await appState.supabaseClient
     .from("profiles")
-    .update({ must_change_password: false })
+    .update({ must_change_password: false, name })
     .eq("id", pendingAdminUser.id);
 
   setLoginBusy(false);
@@ -2400,7 +2412,7 @@ async function handleLoginSetPasswordSubmit() {
     type: "admin",
     id: pendingAdminUser.id,
     email: pendingAdminUser.email,
-    displayName: pendingAdminUser.name?.trim() || pendingAdminUser.email
+    displayName: name
   });
   renderLoginState();
   loadUserItemOrder();
