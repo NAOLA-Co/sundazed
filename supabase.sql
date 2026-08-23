@@ -58,6 +58,9 @@ create table if not exists public.profiles (
 alter table public.profiles
   add column if not exists must_change_password boolean not null default false;
 
+alter table public.profiles
+  add column if not exists name text;
+
 alter table public.profiles enable row level security;
 
 drop policy if exists "users read own profile" on public.profiles;

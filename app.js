@@ -195,6 +195,7 @@ const elements = {
   workspaceKeyInput: document.getElementById("workspaceKeyInput"),
   settingsNoteInput: document.getElementById("settingsNoteInput"),
   createAdminForm: document.getElementById("createAdminForm"),
+  createAdminName: document.getElementById("createAdminName"),
   createAdminEmail: document.getElementById("createAdminEmail"),
   createAdminButton: document.getElementById("createAdminButton"),
   resetDefaultsButton: document.getElementById("resetDefaultsButton"),
@@ -2327,7 +2328,7 @@ async function handleLoginAdminSubmit() {
 
   const { data: profile, error: profileError } = await appState.supabaseClient
     .from("profiles")
-    .select("is_admin, must_change_password")
+    .select("is_admin, must_change_password, name")
     .eq("id", data.user.id)
     .single();
   setLoginBusy(false);
@@ -2338,7 +2339,7 @@ async function handleLoginAdminSubmit() {
   }
 
   if (profile.must_change_password) {
-    appState.pendingAdminUser = { id: data.user.id, email };
+    appState.pendingAdminUser = { id: data.user.id, email, name: profile.name };
     elements.loginNewPassword.value = "";
     elements.loginNewPasswordConfirm.value = "";
     setLoginMode("admin-change-password");
@@ -2351,7 +2352,7 @@ async function handleLoginAdminSubmit() {
     type: "admin",
     id: data.user.id,
     email,
-    displayName: email
+    displayName: profile.name?.trim() || email
   });
   renderLoginState();
   loadUserItemOrder();
@@ -2399,7 +2400,7 @@ async function handleLoginSetPasswordSubmit() {
     type: "admin",
     id: pendingAdminUser.id,
     email: pendingAdminUser.email,
-    displayName: pendingAdminUser.email
+    displayName: pendingAdminUser.name?.trim() || pendingAdminUser.email
   });
   renderLoginState();
   loadUserItemOrder();
@@ -2413,7 +2414,13 @@ async function handleCreateAdminSubmit(event) {
     return;
   }
 
+  const name = elements.createAdminName.value.trim();
   const email = elements.createAdminEmail.value.trim();
+
+  if (!name) {
+    showMessage("Enter a name.");
+    return;
+  }
 
   if (!email) {
     showMessage("Enter an email address.");
@@ -2432,7 +2439,7 @@ async function handleCreateAdminSubmit(event) {
   // (auth.admin.createUser, email_confirm: true) and grant admin — no
   // public signUp(), no confirmation email, no rate limit.
   const { data, error } = await appState.supabaseClient.functions.invoke("create-admin", {
-    body: { email, password: DEFAULT_ADMIN_TEMP_PASSWORD }
+    body: { email, password: DEFAULT_ADMIN_TEMP_PASSWORD, name }
   });
 
   elements.createAdminButton.disabled = false;
@@ -2457,7 +2464,7 @@ async function handleCreateAdminSubmit(event) {
   }
 
   elements.createAdminForm.reset();
-  showMessage(`Admin account created for ${email}. Temporary password: ${DEFAULT_ADMIN_TEMP_PASSWORD}`, true);
+  showMessage(`Admin account created for ${name} (${email}). Temporary password: ${DEFAULT_ADMIN_TEMP_PASSWORD}`, true);
 }
 
 function handleSwitchUser() {

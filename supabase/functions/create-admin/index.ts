@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Caller is not an admin" }, 403);
   }
 
-  let body: { email?: string; password?: string };
+  let body: { email?: string; password?: string; name?: string };
   try {
     body = await req.json();
   } catch {
@@ -60,9 +60,10 @@ Deno.serve(async (req) => {
 
   const email = (body.email || "").trim();
   const password = body.password || "";
+  const name = (body.name || "").trim();
 
-  if (!email || !password) {
-    return jsonResponse({ error: "Email and password are required" }, 400);
+  if (!email || !password || !name) {
+    return jsonResponse({ error: "Name, email, and password are required" }, 400);
   }
 
   // Elevated client — only ever used server-side, never exposed to the browser.
@@ -89,7 +90,7 @@ Deno.serve(async (req) => {
     const { data, error } = await adminClient
       .from("profiles")
       .upsert(
-        { id: created!.user.id, is_admin: true, must_change_password: true },
+        { id: created!.user.id, is_admin: true, must_change_password: true, name },
         { onConflict: "id", ignoreDuplicates: false }
       )
       .select("is_admin")
