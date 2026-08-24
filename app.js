@@ -13,26 +13,28 @@ const DEFAULT_SUPABASE_KEY = "sb_publishable_76GzVg3VQq-sgUjytYWsRg_qOBC3jPv";
 const DEFAULT_ADMIN_TEMP_PASSWORD = "SunD@yz3d!";
 const DEFAULT_WORKSPACE_KEY = IS_DEMO ? "sundazed-demo" : "sundazed-main";
 const DEFAULT_PRESET_ITEMS = [
-  { id: createId(), name: "Vodka Soda", price: 10, variants: [] },
-  { id: createId(), name: "Tequila Soda", price: 10, variants: [] },
-  { id: createId(), name: "Yuzu Whiskey Sour", price: 12, variants: [] },
+  { id: createId(), name: "Vodka Soda", price: 10, category: "Cocktails", variants: [] },
+  { id: createId(), name: "Tequila Soda", price: 10, category: "Cocktails", variants: [] },
+  { id: createId(), name: "Yuzu Whiskey Sour", price: 12, category: "Cocktails", variants: [] },
   {
     id: createId(),
     name: "Shots",
     price: 6,
+    category: "Shots",
     variants: [
       { name: "Vodka", price: null },
       { name: "Tequila", price: null },
       { name: "Whiskey", price: null }
     ]
   },
-  { id: createId(), name: "Hard Seltzer", price: 6, variants: [] },
-  { id: createId(), name: "Sparklin Chi", price: 4, variants: [] },
-  { id: createId(), name: "Whisky Diet", price: 10, variants: [] },
+  { id: createId(), name: "Hard Seltzer", price: 6, category: "Beer & Seltzer", variants: [] },
+  { id: createId(), name: "Sparklin Chi", price: 4, category: "Beer & Seltzer", variants: [] },
+  { id: createId(), name: "Whisky Diet", price: 10, category: "Cocktails", variants: [] },
   {
     id: createId(),
     name: "Wine",
     price: 6,
+    category: "Wine",
     variants: [
       { name: "Red", price: null },
       { name: "White", price: null }
@@ -42,13 +44,14 @@ const DEFAULT_PRESET_ITEMS = [
     id: createId(),
     name: "Margarita",
     price: 12,
+    category: "Cocktails",
     variants: [
       { name: "Regular", price: null },
       { name: "Strawberry", price: 1 },
       { name: "Spicy", price: 1 }
     ]
   },
-  { id: createId(), name: "Espresso Martini", price: 14, variants: [] }
+  { id: createId(), name: "Espresso Martini", price: 14, category: "Cocktails", variants: [] }
 ];
 const TIP_OPTIONS = [
   { id: "none", label: "No Tip", type: "fixed", value: 0 },
@@ -149,6 +152,10 @@ const elements = {
   reportTipsCard: document.getElementById("reportTipsCard"),
   reportDetailModal: document.getElementById("reportDetailModal"),
   reportDetailModalTitle: document.getElementById("reportDetailModalTitle"),
+  reportDetailFilterBar: document.getElementById("reportDetailFilterBar"),
+  reportDetailUserFilter: document.getElementById("reportDetailUserFilter"),
+  reportDetailCategoryFilter: document.getElementById("reportDetailCategoryFilter"),
+  reportDetailPaymentFilter: document.getElementById("reportDetailPaymentFilter"),
   reportDetailList: document.getElementById("reportDetailList"),
   closeReportDetailModalButton: document.getElementById("closeReportDetailModalButton"),
   reportDateFilter: document.getElementById("reportDateFilter"),
@@ -208,6 +215,7 @@ const elements = {
   itemModalCopy: document.getElementById("itemModalCopy"),
   itemModalName: document.getElementById("itemModalName"),
   itemModalPrice: document.getElementById("itemModalPrice"),
+  itemModalCategory: document.getElementById("itemModalCategory"),
   itemModalVariantsField: document.getElementById("itemModalVariantsField"),
   itemModalVariantRows: document.getElementById("itemModalVariantRows"),
   itemModalAddVariantRow: document.getElementById("itemModalAddVariantRow"),
@@ -217,6 +225,7 @@ const elements = {
   editItemModalForm: document.getElementById("editItemModalForm"),
   editItemModalName: document.getElementById("editItemModalName"),
   editItemModalPrice: document.getElementById("editItemModalPrice"),
+  editItemModalCategory: document.getElementById("editItemModalCategory"),
   editItemModalVariantRows: document.getElementById("editItemModalVariantRows"),
   editItemModalAddVariantRow: document.getElementById("editItemModalAddVariantRow"),
   editItemModalDeleteButton: document.getElementById("editItemModalDeleteButton"),
@@ -358,6 +367,9 @@ function bindEvents() {
   elements.reportTipsCard.addEventListener("click", openTipsByUserModal);
   elements.closeReportDetailModalButton.addEventListener("click", closeReportDetailModal);
   elements.reportDetailModal.addEventListener("click", handleModalBackdropClick);
+  elements.reportDetailUserFilter.addEventListener("change", handleReportDetailFilterChange);
+  elements.reportDetailCategoryFilter.addEventListener("change", handleReportDetailFilterChange);
+  elements.reportDetailPaymentFilter.addEventListener("change", handleReportDetailFilterChange);
   attachReportPullToRefresh();
   elements.saveItemsButton.addEventListener("click", handleItemSettingsSave);
   elements.settingsForm.addEventListener("submit", handleSettingsSave);
@@ -473,7 +485,7 @@ function renderPresetItems() {
       if (hasVariants) {
         openVariantModal(item);
       } else {
-        addItemToCart(item.name, item.price);
+        addItemToCart(item.name, item.price, item.category);
       }
     });
     attachPresetLongPress(button, item);
@@ -793,7 +805,7 @@ function renderSettingsPresetList() {
         <span class="drag-handle" aria-hidden="true">☰</span>
         <div>
           <strong>${escapeHtml(item.name)}</strong>
-          <p>${formatCurrency(item.price)}${variantCount ? ` · ${variantCount} option${variantCount === 1 ? "" : "s"}` : ""}</p>
+          <p>${formatCurrency(item.price)}${item.category ? ` · ${escapeHtml(item.category)}` : ""}${variantCount ? ` · ${variantCount} option${variantCount === 1 ? "" : "s"}` : ""}</p>
         </div>
       </div>
       <div class="preset-row-actions">
@@ -1023,12 +1035,94 @@ function closeReportDetailModal() {
   elements.reportDetailModal.classList.add("hidden");
 }
 
-function openAllSalesModal() {
+const NO_VALUE_FILTER = "__none__";
+
+let reportDetailFilters = { user: "", category: "", payment: "" };
+
+function matchesReportFilter(actualValue, filterValue) {
+  if (!filterValue) {
+    return true;
+  }
+  const trimmed = (actualValue || "").toString().trim();
+  if (filterValue === NO_VALUE_FILTER) {
+    return !trimmed;
+  }
+  return trimmed === filterValue;
+}
+
+function getFilteredSalesOrders() {
+  return appState.report.orders.filter((order) => {
+    if (!matchesReportFilter(order.userName, reportDetailFilters.user)) {
+      return false;
+    }
+    if (!matchesReportFilter(order.paymentMethod, reportDetailFilters.payment)) {
+      return false;
+    }
+    if (reportDetailFilters.category) {
+      const items = Array.isArray(order.items) ? order.items : [];
+      const hasMatch = items.some((item) => matchesReportFilter(item.category, reportDetailFilters.category));
+      if (!hasMatch) {
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
+function populateFilterSelect(select, values, { allLabel, noneLabel, labelFor }) {
+  const previousValue = select.value;
+  const uniqueValues = new Set();
+  let hasNoneValue = false;
+
+  values.forEach((rawValue) => {
+    const trimmed = (rawValue || "").toString().trim();
+    if (trimmed) {
+      uniqueValues.add(trimmed);
+    } else {
+      hasNoneValue = true;
+    }
+  });
+
+  const sortedValues = Array.from(uniqueValues).sort((left, right) => left.localeCompare(right));
+
+  let optionsHtml = `<option value="">${allLabel}</option>`;
+  optionsHtml += sortedValues
+    .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(labelFor ? labelFor(value) : value)}</option>`)
+    .join("");
+  if (hasNoneValue) {
+    optionsHtml += `<option value="${NO_VALUE_FILTER}">${noneLabel}</option>`;
+  }
+
+  select.innerHTML = optionsHtml;
+
+  const validValues = new Set([...sortedValues, "", hasNoneValue ? NO_VALUE_FILTER : null]);
+  select.value = validValues.has(previousValue) ? previousValue : "";
+}
+
+function populateReportDetailFilters() {
   const orders = appState.report.orders;
+  populateFilterSelect(elements.reportDetailUserFilter, orders.map((order) => order.userName), {
+    allLabel: "All Users",
+    noneLabel: "Unassigned"
+  });
+  populateFilterSelect(
+    elements.reportDetailCategoryFilter,
+    orders.flatMap((order) => (Array.isArray(order.items) ? order.items.map((item) => item.category) : [])),
+    { allLabel: "All Categories", noneLabel: "Uncategorized" }
+  );
+  populateFilterSelect(elements.reportDetailPaymentFilter, orders.map((order) => order.paymentMethod), {
+    allLabel: "All Payments",
+    noneLabel: "Unspecified",
+    labelFor: (value) => PAYMENT_METHOD_LABELS[value] || value
+  });
+}
+
+function renderAllSalesList() {
+  const orders = getFilteredSalesOrders();
   elements.reportDetailList.innerHTML = "";
 
   if (!orders.length) {
-    elements.reportDetailList.innerHTML = `<div class="empty-state"><p>No sales in the report yet.</p></div>`;
+    elements.reportDetailList.innerHTML = `<div class="empty-state"><p>No sales match these filters.</p></div>`;
   } else {
     orders
       .slice()
@@ -1037,11 +1131,30 @@ function openAllSalesModal() {
         elements.reportDetailList.appendChild(buildOrderRow(order));
       });
   }
+}
 
+function handleReportDetailFilterChange() {
+  reportDetailFilters = {
+    user: elements.reportDetailUserFilter.value,
+    category: elements.reportDetailCategoryFilter.value,
+    payment: elements.reportDetailPaymentFilter.value
+  };
+  renderAllSalesList();
+}
+
+function openAllSalesModal() {
+  reportDetailFilters = { user: "", category: "", payment: "" };
+  populateReportDetailFilters();
+  elements.reportDetailUserFilter.value = "";
+  elements.reportDetailCategoryFilter.value = "";
+  elements.reportDetailPaymentFilter.value = "";
+  elements.reportDetailFilterBar.classList.remove("hidden");
+  renderAllSalesList();
   showReportDetailModal("All Sales");
 }
 
 function openCollectedByMethodModal() {
+  elements.reportDetailFilterBar.classList.add("hidden");
   const { collectedByMethod } = getReportMetrics();
   elements.reportDetailList.innerHTML = "";
 
@@ -1066,6 +1179,7 @@ function openCollectedByMethodModal() {
 }
 
 function openTipsByUserModal() {
+  elements.reportDetailFilterBar.classList.add("hidden");
   const { tipsByUser } = getReportMetrics();
   elements.reportDetailList.innerHTML = "";
 
@@ -1212,15 +1326,17 @@ function updateScreen() {
   }
 }
 
-function addItemToCart(name, price) {
+function addItemToCart(name, price, category) {
   const existing = appState.cart.find((item) => item.name === name && item.price === price);
   if (existing) {
     existing.quantity += 1;
+    existing.category = existing.category || category || "";
   } else {
     appState.cart.push({
       id: createId(),
       name,
       price: roundMoney(price),
+      category: category || "",
       quantity: 1,
       addedBy: appState.session ? appState.session.displayName : null
     });
@@ -1307,6 +1423,7 @@ function handleItemModalSubmit(event) {
   event.preventDefault();
   const name = elements.itemModalName.value.trim();
   const price = Number.parseFloat(elements.itemModalPrice.value);
+  const category = elements.itemModalCategory.value.trim();
 
   if (!name) {
     showMessage("Custom item name is required.");
@@ -1323,6 +1440,7 @@ function handleItemModalSubmit(event) {
       id: createId(),
       name,
       price: roundMoney(price),
+      category,
       variants: sanitizeVariants(itemModalVariantsDraft)
     });
     saveSettings();
@@ -1332,7 +1450,7 @@ function handleItemModalSubmit(event) {
     return;
   }
 
-  addItemToCart(name, price);
+  addItemToCart(name, price, category);
   closeItemModal();
   showMessage("Custom item added.", true);
 }
@@ -1398,6 +1516,7 @@ function openEditItemModal(item) {
   editItemModalItem = item;
   elements.editItemModalName.value = item.name;
   elements.editItemModalPrice.value = item.price;
+  elements.editItemModalCategory.value = item.category || "";
   editItemModalVariantsDraft = (Array.isArray(item.variants) ? item.variants : []).map((variant) => ({
     name: typeof variant === "string" ? variant : variant.name,
     price: typeof variant === "string" || variant.price === null || variant.price === undefined ? "" : variant.price
@@ -1434,6 +1553,7 @@ function handleEditItemModalSubmit(event) {
 
   editItemModalItem.name = name;
   editItemModalItem.price = roundMoney(price);
+  editItemModalItem.category = elements.editItemModalCategory.value.trim();
   editItemModalItem.variants = sanitizeVariants(editItemModalVariantsDraft);
   saveSettings();
   renderAll();
@@ -1470,7 +1590,7 @@ function openVariantModal(item) {
     button.type = "button";
     button.innerHTML = `<strong>${escapeHtml(name)}</strong><span>${formatCurrency(price)}</span>`;
     button.addEventListener("click", () => {
-      addItemToCart(`${item.name} – ${name}`, price);
+      addItemToCart(`${item.name} – ${name}`, price, item.category);
       closeVariantModal();
     });
     elements.variantModalGrid.appendChild(button);
@@ -1755,6 +1875,7 @@ async function markOrderPaid() {
     items: appState.cart.map((item) => ({
       name: item.name,
       price: item.price,
+      category: item.category || "",
       quantity: item.quantity,
       lineTotal: roundMoney(item.price * item.quantity),
       addedBy: item.addedBy || null
@@ -1944,6 +2065,7 @@ function loadCart() {
             id: item.id || createId(),
             name: String(item.name || "").trim(),
             price: roundMoney(Number(item.price)),
+            category: typeof item.category === "string" ? item.category : "",
             quantity: Number.parseInt(item.quantity, 10)
           }))
           .filter((item) => item.name && item.price > 0 && item.quantity > 0)
@@ -2684,6 +2806,7 @@ function normalizeSettings(settings) {
             id: item.id || createId(),
             name: String(item.name || "").trim(),
             price: roundMoney(Number(item.price)),
+            category: typeof item.category === "string" ? item.category.trim() : "",
             variants: sanitizeVariants(item.variants)
           }))
           .filter((item) => item.name && item.price > 0)
@@ -2834,6 +2957,7 @@ function cloneItem(item) {
     id: createId(),
     name: item.name,
     price: item.price,
+    category: item.category || "",
     variants: Array.isArray(item.variants) ? [...item.variants] : []
   };
 }

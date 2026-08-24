@@ -432,6 +432,10 @@
               <span>Price</span>
               <input id="itemModalPrice" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="6.50">
             </label>
+            <label>
+              <span>Category (optional)</span>
+              <input id="itemModalCategory" type="text" maxlength="30" placeholder="Cocktails">
+            </label>
             <div id="itemModalVariantsField" class="hidden">
               <span class="variant-rows-label">Sub-options (optional)</span>
               <p class="variant-rows-hint">Leave price blank to use the base price above.</p>
@@ -460,6 +464,10 @@
             <label>
               <span>Price</span>
               <input id="editItemModalPrice" type="number" inputmode="decimal" min="0.01" step="0.01">
+            </label>
+            <label>
+              <span>Category (optional)</span>
+              <input id="editItemModalCategory" type="text" maxlength="30" placeholder="Cocktails">
             </label>
             <div>
               <span class="variant-rows-label">Sub-options (optional)</span>
@@ -508,6 +516,20 @@
           <div class="panel-heading">
             <h3 id="reportDetailModalTitle">Breakdown</h3>
             <p>Breakdown for the selected date.</p>
+          </div>
+          <div id="reportDetailFilterBar" class="report-detail-filter-bar hidden">
+            <label>
+              <span>User</span>
+              <select id="reportDetailUserFilter"></select>
+            </label>
+            <label>
+              <span>Category</span>
+              <select id="reportDetailCategoryFilter"></select>
+            </label>
+            <label>
+              <span>Payment</span>
+              <select id="reportDetailPaymentFilter"></select>
+            </label>
           </div>
           <div id="reportDetailList" class="report-list"></div>
         </div>
