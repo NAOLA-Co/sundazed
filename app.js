@@ -163,6 +163,7 @@ const elements = {
   reportRefreshButton: document.getElementById("reportRefreshButton"),
   reportPullIndicator: document.getElementById("reportPullIndicator"),
   reportTopItems: document.getElementById("reportTopItems"),
+  reportTopItemsViewAllButton: document.getElementById("reportTopItemsViewAllButton"),
   reportRecentOrders: document.getElementById("reportRecentOrders"),
   clearReportButton: document.getElementById("clearReportButton"),
   saveItemsButton: document.getElementById("saveItemsButton"),
@@ -365,6 +366,7 @@ function bindEvents() {
   elements.reportOrderCountCard.addEventListener("click", openAllSalesModal);
   elements.reportRevenueCard.addEventListener("click", openCollectedByMethodModal);
   elements.reportTipsCard.addEventListener("click", openTipsByUserModal);
+  elements.reportTopItemsViewAllButton.addEventListener("click", openTopItemsModal);
   elements.closeReportDetailModalButton.addEventListener("click", closeReportDetailModal);
   elements.reportDetailModal.addEventListener("click", handleModalBackdropClick);
   elements.reportDetailUserFilter.addEventListener("change", handleReportDetailFilterChange);
@@ -1201,6 +1203,31 @@ function openTipsByUserModal() {
   }
 
   showReportDetailModal("Tips by User");
+}
+
+function openTopItemsModal() {
+  elements.reportDetailFilterBar.classList.add("hidden");
+  const { allItems } = getReportMetrics();
+  elements.reportDetailList.innerHTML = "";
+
+  if (!allItems.length) {
+    elements.reportDetailList.innerHTML = `<div class="empty-state"><p>No paid sales logged yet.</p></div>`;
+  } else {
+    allItems.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "report-row";
+      row.innerHTML = `
+        <div>
+          <strong>${escapeHtml(item.name)}</strong>
+          <p>${item.quantity} item${item.quantity === 1 ? "" : "s"} logged</p>
+        </div>
+        <strong>${formatCurrency(item.revenue)}</strong>
+      `;
+      elements.reportDetailList.appendChild(row);
+    });
+  }
+
+  showReportDetailModal("All Items");
 }
 
 function handleReportDateChange() {
@@ -2180,7 +2207,9 @@ function getReportMetrics() {
       .sort((left, right) => right.total - left.total),
     topItems: Array.from(itemMap.values())
       .sort((left, right) => right.quantity - left.quantity || right.revenue - left.revenue)
-      .slice(0, 5)
+      .slice(0, 5),
+    allItems: Array.from(itemMap.values())
+      .sort((left, right) => right.quantity - left.quantity || right.revenue - left.revenue)
   };
 }
 
