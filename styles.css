@@ -1310,6 +1310,7 @@ select option {
 
 .report-filter-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   gap: 12px;
   margin-bottom: 16px;

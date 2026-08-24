@@ -164,6 +164,7 @@ const elements = {
   reportPullIndicator: document.getElementById("reportPullIndicator"),
   reportTopItems: document.getElementById("reportTopItems"),
   reportTopItemsViewAllButton: document.getElementById("reportTopItemsViewAllButton"),
+  reportExportButton: document.getElementById("reportExportButton"),
   reportRecentOrders: document.getElementById("reportRecentOrders"),
   clearReportButton: document.getElementById("clearReportButton"),
   saveItemsButton: document.getElementById("saveItemsButton"),
@@ -362,6 +363,7 @@ function bindEvents() {
   elements.reportDateFilter.addEventListener("change", handleReportDateChange);
   elements.reportTodayButton.addEventListener("click", setReportDateToToday);
   elements.reportRefreshButton.addEventListener("click", handleReportRefreshClick);
+  elements.reportExportButton.addEventListener("click", handleReportExportClick);
   elements.clearReportButton.addEventListener("click", clearReport);
   elements.reportOrderCountCard.addEventListener("click", openAllSalesModal);
   elements.reportRevenueCard.addEventListener("click", openCollectedByMethodModal);
@@ -1247,6 +1249,54 @@ async function handleReportRefreshClick() {
   await refreshReportData();
   elements.reportRefreshButton.disabled = false;
   elements.reportRefreshButton.classList.remove("refreshing");
+}
+
+function csvField(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function buildReportCsv(orders) {
+  const header = ["Date", "Time", "Items", "Subtotal", "Tip", "Total", "Payment Method", "User", "Note"];
+  const rows = orders.map((order) => {
+    const date = new Date(order.timestamp);
+    const items = (Array.isArray(order.items) ? order.items : [])
+      .map((item) => `${item.name} x${item.quantity}`)
+      .join(", ");
+    return [
+      getLocalDateKey(order.timestamp) || appState.reportFilterDate,
+      Number.isNaN(date.getTime()) ? "" : date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+      items,
+      roundMoney(order.subtotal || 0).toFixed(2),
+      roundMoney(order.tip || 0).toFixed(2),
+      roundMoney(order.total || 0).toFixed(2),
+      PAYMENT_METHOD_LABELS[order.paymentMethod] || order.paymentMethod || "",
+      order.userName || "",
+      order.note || ""
+    ];
+  });
+
+  return [header, ...rows].map((row) => row.map(csvField).join(",")).join("\r\n");
+}
+
+function handleReportExportClick() {
+  const orders = appState.report.orders;
+
+  if (!orders.length) {
+    showMessage("No sales to export for this date.");
+    return;
+  }
+
+  const csv = buildReportCsv(orders);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `sundazed-sales-${appState.reportFilterDate}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 const REPORT_PULL_TRIGGER_PX = 70;
